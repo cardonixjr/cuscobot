@@ -7,12 +7,17 @@ PORT = "COM12"
 BAUDRATE = 9600
 TIMEOUT = 0.1
 
-# Open the serial communication
-try:
-    arduino = serial.Serial(port=PORT, baudrate=BAUDRATE, timeout=TIMEOUT)
-except serial.SerialException as e:
-    print(f"Serial communication failed on port {PORT}: {e}")
-    exit()
+def open_communication(baudrate, port, timeout=0.1):
+    # Open the serial communication
+    try:
+        communication = serial.Serial(port=port, baudrate=baudrate, timeout=timeout)
+    except serial.SerialException as e:
+        print(f"Serial communication failed on port {PORT}: {e}")
+        return False
+
+    while not communication.is_open(): pass
+    print(f"Serial communication sucessfully opened in port {port}, with baudrate {baudrate}")
+    return communication
 
 class OdometryCalculator:
     def __init__(self, wheel_radius=0.0835, wheel_base=0.35, ticks_per_revolution=90):
@@ -73,64 +78,68 @@ def send_serial(data):
     arduino.write(message.encode('utf-8'))
     time.sleep(0.01)
 
-# cada passo é dado por (pwme,pwmd,dire,dird e tempo)
-path = [(0,0,1,1,2),(20,10,1,1,2),(0,0,1,1,2),(20,10,0,1,0.5)]
-# path = [(0,0,1,1,2),(15,7.5,1,1,2),(0,0,1,1,2),(15,7.5,0,1,1)]
-#path = [(10,5,1,1,2)] #reta
-marks = [()]
 
-# Listas para armazenar posições x e y
-x_positions = []
-y_positions = []
+if __name__ == "__main__":
+    arduino = open_communication(BAUDRATE, PORT, TIMEOUT)
+
+    # cada passo é dado por (pwme,pwmd,dire,dird e tempo)
+    path = [(0,0,1,1,2),(20,10,1,1,2),(0,0,1,1,2),(20,10,0,1,0.5)]
+    # path = [(0,0,1,1,2),(15,7.5,1,1,2),(0,0,1,1,2),(15,7.5,0,1,1)]
+    #path = [(10,5,1,1,2)] #reta
+    marks = [()]
+
+    # Listas para armazenar posições x e y
+    x_positions = []
+    y_positions = []
 
 
-init_time = time.time()
-last_step_time = time.time()
+    init_time = time.time()
+    last_step_time = time.time()
 
-time.sleep(1)
+    time.sleep(1)
 
-arduino.flush()
-for i in range(4):
-    for step in path:
-        print(f"executando passo: {step}")
-        send_serial(f"pwme,{step[0]}")
-        send_serial(f"pwmd,{step[1]}")
-        send_serial(f"dire,{step[2]}")
-        send_serial(f"dird,{step[3]}")
-        
-        while not (time.time() - last_step_time > step[4]):
-            data = read_pulses()
+    arduino.flush()
+    for i in range(4):
+        for step in path:
+            print(f"executando passo: {step}")
+            send_serial(f"pwme,{step[0]}")
+            send_serial(f"pwmd,{step[1]}")
+            send_serial(f"dire,{step[2]}")
+            send_serial(f"dird,{step[3]}")
             
-            if data:
-                pose = odometry.update_odometry(data["pd"], data["pe"])
-                # print(f"Posição estimada: x={pose[0]:.3f}, y={pose[1]:.3f}, theta={pose[2]:.3f}")
-                print(data)
+            while not (time.time() - last_step_time > step[4]):
+                data = read_pulses()
+                
+                if data:
+                    pose = odometry.update_odometry(data["pd"], data["pe"])
+                    # print(f"Posição estimada: x={pose[0]:.3f}, y={pose[1]:.3f}, theta={pose[2]:.3f}")
+                    print(data)
 
-                # Armazena a posição (x, y) para o gráfico
-                x_positions.append(pose[0])
-                y_positions.append(pose[1])
-        
-        last_step_time = time.time()
+                    # Armazena a posição (x, y) para o gráfico
+                    x_positions.append(pose[0])
+                    y_positions.append(pose[1])
+            
+            last_step_time = time.time()
 
-send_serial(f"pwme,0")
-send_serial(f"pwmd,0")
-send_serial(f"dire,1")
-send_serial(f"dird,1")
+    send_serial(f"pwme,0")
+    send_serial(f"pwmd,0")
+    send_serial(f"dire,1")
+    send_serial(f"dird,1")
 
-#plt.figure(figsize=(8, 6))
-#plt.plot(x_positions, y_positions, marker='o', color='b', linestyle='-', label="Trajetória do robô")
-#plt.title("Trajetória do robô no plano (x, y)")
-#plt.xlabel("Posição X (metros)")
-#plt.ylabel("Posição Y (metros)")
-#plt.legend()
-#plt.grid(True)
-#plt.show()
-# Plotando a trajetória com Plotly
-fig = go.Figure()
+    #plt.figure(figsize=(8, 6))
+    #plt.plot(x_positions, y_positions, marker='o', color='b', linestyle='-', label="Trajetória do robô")
+    #plt.title("Trajetória do robô no plano (x, y)")
+    #plt.xlabel("Posição X (metros)")
+    #plt.ylabel("Posição Y (metros)")
+    #plt.legend()
+    #plt.grid(True)
+    #plt.show()
+    # Plotando a trajetória com Plotly
+    fig = go.Figure()
 
-fig.add_trace(go.Scatter(x=x_positions, y=y_positions, mode='lines+markers', name='Trajetória'))
+    fig.add_trace(go.Scatter(x=x_positions, y=y_positions, mode='lines+markers', name='Trajetória'))
 
-fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X (metros)', yaxis_title='Posição Y (metros)')
+    fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X (metros)', yaxis_title='Posição Y (metros)')
 
-# Exibe o gráfico no navegador
-fig.show()
+    # Exibe o gráfico no navegador
+    fig.show()
