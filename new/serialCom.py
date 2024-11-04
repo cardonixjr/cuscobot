@@ -14,8 +14,7 @@ class Communication:
             while not(self.communication.is_open): pass
             print(f"Serial communication successfully opened on port {self.port}")
         except serial.SerialException as e:
-            print(f"Serial communication failed on port {self.port}: {e}")
-        return False
+            raise Exception(f"Serial communication failed on port {self.port}: {e}")
     
     def close(self):
         self.communication.close()
