@@ -7,8 +7,8 @@ class GoToGoal:
 
         # PID gains
         self.Kp = 1.5
-        self.Ki = 0.01
-        self.Kd = 0.5
+        self.Ki = 1
+        self.Kd = 0.75
 
     def step(self, x_goal, y_goal, x, y, theta, dt, precision = 0.05):
         dt = dt/1000000000
@@ -48,6 +48,20 @@ class GoToGoal:
         self.E_d = e_k
 
         return w
+    
+    def linear_speed(self, max_distance, max_pwm, x_goal, y_goal, x, y):
+        # Distance between goal and robot position in X
+        u_x = x_goal - x
+
+        # Distance between goal and robot position in Y
+        u_y = y_goal - y
+
+        euclidean_u = math.sqrt(u_y**2 + u_x**2)
+
+        pwm = euclidean_u*100/max_distance
+        
+        return pwm if pwm <= max_pwm else max_pwm
+
 
 def limit(value, downLimit, upLimit):
         return upLimit if value >= upLimit else downLimit if value <= downLimit else value

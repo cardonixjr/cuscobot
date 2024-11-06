@@ -25,17 +25,17 @@ class odometry():
         self.meters_per_tick_right = (2 * math.pi * self.er.radius) / (er.ticks_p_revol)
 
         # RPM speed
-        self.wl_speed_rpm = (60/self.el.ticks_p_revol) * 10**9
-        self.wr_speed_rpm = (60/self.er.ticks_p_revol) * 10**9
+        # self.wl_speed_rpm = (60/self.el.ticks_p_revol) * 10**9
+        # self.wr_speed_rpm = (60/self.er.ticks_p_revol) * 10**9
 
 
-    def step(self, left_direction=1, right_direction=1):
+    def step(self):
         '''
             Call this function periodically to update robot pose estimiation.
         '''
         # Calculate the delta for ticks since last read
-        delta_ticks_left = (self.el.counter - self.wl_last_counter) * left_direction
-        delta_ticks_right = (self.er.counter - self.wr_last_counter) * right_direction
+        delta_ticks_left = (self.el.counter - self.wl_last_counter)
+        delta_ticks_right = (self.er.counter - self.wr_last_counter)
         
         # Update counters to next read
         self.wl_last_counter = self.el.counter
