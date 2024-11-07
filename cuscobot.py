@@ -6,7 +6,7 @@ import encoder, odometry, serialCom, goToGoal
 import plotly.graph_objects as go
 
 # Serial communication variables
-PORT = "COM5"
+PORT = "COM7"
 BAUDRATE = 9600
 TIMEOUT = 0.1
 
@@ -15,6 +15,7 @@ WHEEL_RADIUS = 0.0835
 WHEEL_BASE = 0.35
 TICKS_PER_REVOLUTION = 90
 MAX_PWM = 25
+MAX_PWM_STEP = MAX_PWM # Maior mudança de PWM a cada loop. Isso igual a MAX_PWM é basicamente sem limitação de tamanho de passo.
 
 # Encoders
 left_wheel_encoder = encoder.encoder(TICKS_PER_REVOLUTION, WHEEL_RADIUS)
@@ -27,6 +28,7 @@ time.sleep(5)
 
 # Set a clock to handle the loop speed
 clock = pygame.time.Clock()
+FPS = 100
 
 # Odometry
 odom = odometry.odometry(left_wheel_encoder, right_wheel_encoder, WHEEL_BASE)
@@ -55,8 +57,9 @@ plt.show(block=False)
 plt.pause(.1)
 
 # main loop
-goal = [1,1]
-plt.plot(goal, color='r')
+goal = [0,1]
+plt.scatter(goal[0], goal[1], marker='x', color='r')
+
 end = False
 while not end:
     # Check for keyboard interruption
@@ -90,7 +93,8 @@ while not end:
     pose_log['theta'].append(theta)
 
     # Calculates the angular speed w
-    w = controller.step(goal[0], goal[1], x, y, theta, dt)
+    w = controller.step(goal[0], goal[1], x, y, theta, dt, precision = 0.1)
+    if w == None: break # Termina o loop se chegar ao destino
     print(f"velocidade angular calculada: {w}")
     
     left, right = odometry.uni_to_diff(5, w, left_wheel_encoder, right_wheel_encoder, WHEEL_BASE)
@@ -124,11 +128,12 @@ while not end:
     # Made a little step in the direction of the speed calculated by the Controller
     # This is made to prevent a huge speed change in a small space of time
     # Only change the PWM by 1 each step
+
     left_dif = left_pwm - last_left_pwm
     right_dif = right_pwm - last_right_pwm
 
-    last_left_pwm += left_dif if left_dif < 1 else 1
-    last_right_pwm += right_dif if right_dif < 1 else 1
+    last_left_pwm += left_dif if left_dif < MAX_PWM_STEP else MAX_PWM_STEP
+    last_right_pwm += right_dif if right_dif < MAX_PWM_STEP else MAX_PWM_STEP
 
     print(f"pwm_esquerdo: {last_left_pwm}, dir {left_dir}\npwm_direito: {last_right_pwm}, dir {right_dir}")
     arduino.send_data(f"pwme,{last_left_pwm}")
@@ -142,8 +147,7 @@ while not end:
     fig.canvas.flush_events()
 
     # Limit to 10 frames per second. (100ms loop)
-    # clock.tick(100)
-    time.sleep(0.001)
+    clock.tick(FPS)
 
 arduino.send_data(f"pwm,0")
 arduino.send_data(f"dir,0")

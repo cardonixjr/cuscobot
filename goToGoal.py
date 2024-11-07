@@ -6,9 +6,9 @@ class GoToGoal:
         self.E_i = 0        # Error for the integrative term
 
         # PID gains
-        self.Kp = 1.5
-        self.Ki = 1
-        self.Kd = 0.75
+        self.Kp = 15
+        self.Ki = 2
+        self.Kd = 4
 
     def step(self, x_goal, y_goal, x, y, theta, dt, precision = 0.05):
         dt = dt/1000000000
@@ -21,7 +21,7 @@ class GoToGoal:
 
         if abs(u_x) < precision and abs(u_y) < precision:
             print("voce chegou ao seu destino")
-            return 0
+            return None
         
         # Angle from robot to goal
         theta_goal = math.atan2(u_y, u_x)
