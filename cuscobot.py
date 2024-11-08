@@ -6,16 +6,17 @@ import encoder, odometry, serialCom, goToGoal
 import plotly.graph_objects as go
 
 # Serial communication variables
-PORT = "COM7"
+PORT = "COM5"
 BAUDRATE = 9600
 TIMEOUT = 0.1
 
 # Robot info
 WHEEL_RADIUS = 0.0835
-WHEEL_BASE = 0.35
+WHEEL_BASE = 0.465
 TICKS_PER_REVOLUTION = 90
 MAX_PWM = 25
 MAX_PWM_STEP = MAX_PWM # Maior mudança de PWM a cada loop. Isso igual a MAX_PWM é basicamente sem limitação de tamanho de passo.
+MAX_SPEED_DISTANCE = 1 # Distância em metros antes do robô começar a reduzir a velocidad
 
 # Encoders
 left_wheel_encoder = encoder.encoder(TICKS_PER_REVOLUTION, WHEEL_RADIUS)
@@ -52,12 +53,12 @@ pose_log = {'x':[], 'y':[], 'theta':[]}
 fig, ax = plt.subplots()
 line = ax.scatter(pose_log['x'], pose_log['y'])
 
-plt.axis([-2,2,-2,2])
+plt.axis([-3,3,-3,3])
 plt.show(block=False)
 plt.pause(.1)
 
 # main loop
-goal = [0,1]
+goal = [-2,1]
 plt.scatter(goal[0], goal[1], marker='x', color='r')
 
 end = False
@@ -108,7 +109,7 @@ while not end:
         left_norm = left/right
         right_norm = right/right
 
-    max_speed = controller.linear_speed(2, MAX_PWM, goal[0], goal[1], x, y)
+    max_speed = controller.linear_speed(MAX_SPEED_DISTANCE, MAX_PWM, goal[0], goal[1], x, y)
     left_pwm = left_norm*max_speed
     right_pwm = right_norm*max_speed
 
