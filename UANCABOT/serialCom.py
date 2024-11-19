@@ -5,6 +5,7 @@ SET_SPEED_LEFT = chr(101)
 SET_SPEED = chr(102)
 GET_LEFT_ENCODER = chr(105)
 GET_RIGHT_ENCODER = chr(106)
+RESET_ENCODER = chr(114)
 
 class Communication:
     def __init__(self, port, baudrate, timeout=0.1):
@@ -29,7 +30,10 @@ class Communication:
         self.communication.flush()
         message = str(data) + '\r'
         self.communication.write(message.encode('ascii'))
-        time.sleep(0.1)
+        time.sleep(0.01)
+
+    def reset_encoder(self):
+        self.send_data(RESET_ENCODER)
 
     def set_speed_left(self, value):
         self.send_data(f"{SET_SPEED_LEFT}{value}")
@@ -60,3 +64,9 @@ class Communication:
         self.send_data(f"{GET_RIGHT_ENCODER}")
         response = self.communication.readline().decode("utf-8").replace("\r\n","")
         return response
+
+    def get_encoders(self):
+        self.send_data(f"{GET_LEFT_ENCODER}{GET_RIGHT_ENCODER}")
+        response1 = self.communication.readline().decode("utf-8").replace("\r\n","")
+        response2 = self.communication.readline().decode("utf-8").replace("\r\n","")
+        return (response1, response2)

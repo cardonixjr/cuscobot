@@ -24,81 +24,96 @@ int vel_d = 128;
 
 void setup()
 {
-Serial.begin(9600);
-Serial1.begin(9600);
+  Serial.begin(9600);
+  Serial1.begin(9600);
+  delay(10);
+  Serial1.write(CMD);
+  Serial1.write(ENC_RESET);
+  delay(10);
 }
 void loop()
 {
-if(Serial.available() > 0)
-{
-int roda = Serial.read();
-if (roda == 102){
-Serial1.write(CMD);
-Serial1.write(SET_SPEED1);
-Serial1.write(128);
+  if(Serial.available() > 0)
+  {
+    int roda = Serial.read();
+    if (roda == 102)
+    {
+      Serial1.write(CMD);
+      Serial1.write(SET_SPEED1);
+      Serial1.write(128);
 
-Serial1.write(CMD);
-Serial1.write(SET_SPEED2);
-Serial1.write(128);
-}
-if(roda == 101) // roda esquerda
-{
-vel_e = Serial.parseInt();
-Serial1.write(CMD);
-Serial1.write(SET_SPEED1);
-Serial1.write(vel_e);
-}
-if(roda == 100) // roda direita
-{
-vel_d = Serial.parseInt();
-Serial1.write(CMD);
-Serial1.write(SET_SPEED2);
-Serial1.write(vel_d);
-}
-if(roda == 105)
-{
-Serial1.write(CMD);
-Serial1.write(GET_ENC1); // Recieve encoder 1 value
-delay(50);
-if (Serial1.available() > 3)
-{
-enc1a = Serial1.read();
-enc1b = Serial1.read();
-enc1c = Serial1.read();
-enc1d = Serial1.read();
-}
-int count = sizeof(enc1a);
-char* chars;
-encoder = (((uint32_t)enc1a << 24) +
-((uint32_t)enc1b << 16) +
-((uint32_t)enc1c << 8) +
-((uint32_t)enc1d << 0));
-Serial.println((int) encoder,DEC);
-delay(300);
-}
-if(roda==106)
+      Serial1.write(CMD);
+      Serial1.write(SET_SPEED2);
+      Serial1.write(128);
+    }
+    
+    if(roda == 101) // roda esquerda
+    {
+      vel_e = Serial.parseInt();
+      Serial1.write(CMD);
+      Serial1.write(SET_SPEED1);
+      Serial1.write(vel_e);
+    }
 
+    if(roda == 100) // roda direita
+    {
+      vel_d = Serial.parseInt();
+      Serial1.write(CMD);
+      Serial1.write(SET_SPEED2);
+      Serial1.write(vel_d);
+    }
 
+    if(roda == 105)
+    {
+      Serial1.write(CMD);
+      Serial1.write(GET_ENC1); // Recieve encoder 1 value
+      // delay(50);
+      while(Serial1.available()<=3);
+      if (Serial1.available() > 3)
+      {
+        enc1a = Serial1.read();
+        enc1b = Serial1.read();
+        enc1c = Serial1.read();
+        enc1d = Serial1.read();
+      }
+      int count = sizeof(enc1a);
+      char* chars;
+      encoder = (((uint32_t)enc1a << 24) +
+      ((uint32_t)enc1b << 16) +
+      ((uint32_t)enc1c << 8) +
+      ((uint32_t)enc1d << 0));
+      Serial.println((int) encoder,DEC);
+      // delay(300);
+    }
 
-{
-Serial1.write(CMD);
-Serial1.write(GET_ENC2); // Recieve encoder 1 value
-delay(50);
-if (Serial1.available() > 3)
-{
-enc1a = Serial1.read();
-enc1b = Serial1.read();
-enc1c = Serial1.read();
-enc1d = Serial1.read();
-}
-int count = sizeof(enc1a);
-char* chars;
-encoder = (((uint32_t)enc1a << 24) +
-((uint32_t)enc1b << 16) +
-((uint32_t)enc1c << 8) +
-((uint32_t)enc1d << 0));
-Serial.println((int) encoder,DEC);
-delay(300);
-}
-}
+    if(roda==106)
+    {
+      Serial1.write(CMD);
+      Serial1.write(GET_ENC2); // Recieve encoder 1 value
+      // delay(50);
+      while(Serial1.available()<=3);
+      if (Serial1.available() > 3)
+      {
+        enc1a = Serial1.read();
+        enc1b = Serial1.read();
+        enc1c = Serial1.read();
+        enc1d = Serial1.read();
+      }
+      int count = sizeof(enc1a);
+      char* chars;
+      encoder = (((uint32_t)enc1a << 24) +
+      ((uint32_t)enc1b << 16) +
+      ((uint32_t)enc1c << 8) +
+      ((uint32_t)enc1d << 0));
+      Serial.println((int) encoder,DEC);
+      // delay(300);
+    }
+
+    if(roda==114)
+    {
+        Serial1.write(CMD);
+        Serial1.write(ENC_RESET);
+    }
+
+  }
 }

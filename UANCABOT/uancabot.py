@@ -11,11 +11,11 @@ BAUDRATE = 9600
 TIMEOUT = 0.1
 
 # Robot info
-WHEEL_RADIUS = 0.0625
-WHEEL_BASE = 0.465
+WHEEL_RADIUS = 0.06
+WHEEL_BASE = 0.335
 TICKS_PER_REVOLUTION = 980
-MAX_PWM = 128
-MAX_PWM_STEP = MAX_PWM # Maior mudança de PWM a cada loop. Isso igual a MAX_PWM é basicamente sem limitação de tamanho de passo.
+MAX_PWM = 48
+MAX_PWM_STEP = 10 # Maior mudança de PWM a cada loop. Isso igual a MAX_PWM é basicamente sem limitação de tamanho de passo.
 MAX_SPEED_DISTANCE = 1 # Distância em metros antes do robô começar a reduzir a velocidad
 
 # Encoders
@@ -25,7 +25,9 @@ right_wheel_encoder = encoder.encoder(TICKS_PER_REVOLUTION, WHEEL_RADIUS)
 # Open serial communication
 arduino = serialCom.Communication(PORT, BAUDRATE, TIMEOUT)
 arduino.open()
-time.sleep(5)
+time.sleep(3)
+# arduino.reset_encoder()
+time.sleep(1)
 
 # Set a clock to handle the loop speed
 clock = pygame.time.Clock()
@@ -44,8 +46,8 @@ controller = goToGoal.GoToGoal()
 start_time = time.time_ns()
 last_read = time.time()
 
-last_left_pwm = 0
-last_right_pwm = 0
+last_left_pwm = 128
+last_right_pwm = 128
 
 # Ploting
 pose_log = {'x':[], 'y':[], 'theta':[]}
@@ -53,13 +55,12 @@ pose_log = {'x':[], 'y':[], 'theta':[]}
 fig, ax = plt.subplots()
 line = ax.scatter(pose_log['x'], pose_log['y'])
 
-plt.axis([-3,3,-3,3])
+plt.axis([-2,2,-2,2])
 plt.show(block=False)
 plt.pause(.1)
 
 # main loop
-# PATH = [[1,0],[1,1],[0,1],[0,0]]
-PATH = [[1,1]]
+PATH = [[0,1],[1,1],[1,0],[0,0]]
 step = 0
 goal = PATH[step]
 plt.scatter(goal[0], goal[1], marker='x', color='r')
@@ -76,15 +77,16 @@ while not end:
     ld = arduino.get_encoder_right()
 
     if le and ld:
-        right_wheel_encoder.counter = int(le)
-        left_wheel_encoder.counter = int(ld)
+        right_wheel_encoder.counter = int(ld)
+        left_wheel_encoder.counter = int(le)
         last_read = time.time()
     # If can't read anything, use the last value
     # If passed a long time since the last read, stop the code
     elif time.time() - last_read > 5:
         print("muito tempo sem ler arduino, encerrando...")
         break
-
+    # print(f"pd: {right_wheel_encoder.counter} ; pe: {left_wheel_encoder.counter}")
+    
     # Calculate how many ns passed since last read
     t = time.time_ns()
     dt = t - start_time
@@ -96,20 +98,21 @@ while not end:
     pose_log['x'].append(x)
     pose_log['y'].append(y)
     pose_log['theta'].append(theta)
-
-    print(f"x: {x}, y:{y}, t:{theta}")
+    # print(f"x: {x}, y:{y}, t:{theta}")
 
     # Calculates the angular speed w
-    w = controller.step(goal[0], goal[1], x, y, theta, dt, precision = 0.1)
+    w = controller.step(goal[0], goal[1], x, y, theta, dt, precision = 0.05)
+    if w != None: last_w = w
     if w == None: # Se chegar ao destino, vai para o próximo ponto da trajetória 
-        if step+1 > len(PATH):  break  # Se chegar ao fim da trajetória, encerra o código
+        if step+1 == len(PATH):  break  # Se chegar ao fim da trajetória, encerra o código
         step += 1
-        goal = PATH[step] 
-    
+        goal = PATH[step]
+        plt.scatter(goal[0], goal[1], marker='x', color='r')
+        w = last_w
     print(f"velocidade angular calculada: {w}")
     
     left, right = odometry.uni_to_diff(5, w, left_wheel_encoder, right_wheel_encoder, WHEEL_BASE)
-    # print(f"left: {left}\nright{right}")
+    # print(f"left: {left}\nright: {right}")
 
     # Normalize the result speed
     if left > right:
@@ -118,6 +121,7 @@ while not end:
     else:
         left_norm = left/right
         right_norm = right/right
+    # print(f"l_norm: {left_norm} ; r_norm: {right_norm}")
 
     max_speed = controller.speed_limit_by_distance(MAX_SPEED_DISTANCE, MAX_PWM, goal[0], goal[1], x, y)
     left_pwm = left_norm*max_speed
@@ -150,8 +154,8 @@ while not end:
     # Limit to 10 frames per second. (100ms loop)
     clock.tick(FPS)
 
-arduino.set_speed_left(0)
-arduino.set_speed_right(0)
+arduino.set_speed_left(128)
+arduino.set_speed_right(128)
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=pose_log['x'], y=pose_log['y'], mode='lines+markers', name='Trajetória'))
@@ -159,6 +163,7 @@ fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X 
 # Exibe o gráfico no navegador
 fig.show()
 
+arduino.close()
 plt.show()
 pygame.quit()
      

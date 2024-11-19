@@ -6,9 +6,9 @@ class GoToGoal:
         self.E_i = 0        # Error for the integrative term
 
         # PID gains
-        self.Kp = 30
+        self.Kp = 100
         self.Ki = 2
-        self.Kd = 10
+        self.Kd = 20
 
     def step(self, x_goal, y_goal, x, y, theta, dt, precision = 0.05):
         dt = dt/1000000000
