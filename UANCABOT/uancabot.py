@@ -6,14 +6,14 @@ import encoder, odometry, serialCom, goToGoal
 import plotly.graph_objects as go
 
 # Serial communication variables
-PORT = "COM5"
+PORT = "COM8"
 BAUDRATE = 9600
 TIMEOUT = 0.1
 
 # Robot info
-WHEEL_RADIUS = 0.0835
+WHEEL_RADIUS = 0.0625
 WHEEL_BASE = 0.465
-TICKS_PER_REVOLUTION = 90
+TICKS_PER_REVOLUTION = 980
 MAX_PWM = 128
 MAX_PWM_STEP = MAX_PWM # Maior mudança de PWM a cada loop. Isso igual a MAX_PWM é basicamente sem limitação de tamanho de passo.
 MAX_SPEED_DISTANCE = 1 # Distância em metros antes do robô começar a reduzir a velocidad
@@ -58,7 +58,10 @@ plt.show(block=False)
 plt.pause(.1)
 
 # main loop
-goal = [-2,1]
+# PATH = [[1,0],[1,1],[0,1],[0,0]]
+PATH = [[1,1]]
+step = 0
+goal = PATH[step]
 plt.scatter(goal[0], goal[1], marker='x', color='r')
 
 end = False
@@ -72,9 +75,9 @@ while not end:
     le = arduino.get_encoder_left()
     ld = arduino.get_encoder_right()
 
-    if le != None and ld != None:
-        right_wheel_encoder.counter = le
-        left_wheel_encoder.counter = ld
+    if le and ld:
+        right_wheel_encoder.counter = int(le)
+        left_wheel_encoder.counter = int(ld)
         last_read = time.time()
     # If can't read anything, use the last value
     # If passed a long time since the last read, stop the code
@@ -94,9 +97,15 @@ while not end:
     pose_log['y'].append(y)
     pose_log['theta'].append(theta)
 
+    print(f"x: {x}, y:{y}, t:{theta}")
+
     # Calculates the angular speed w
     w = controller.step(goal[0], goal[1], x, y, theta, dt, precision = 0.1)
-    if w == None: break # Termina o loop se chegar ao destino
+    if w == None: # Se chegar ao destino, vai para o próximo ponto da trajetória 
+        if step+1 > len(PATH):  break  # Se chegar ao fim da trajetória, encerra o código
+        step += 1
+        goal = PATH[step] 
+    
     print(f"velocidade angular calculada: {w}")
     
     left, right = odometry.uni_to_diff(5, w, left_wheel_encoder, right_wheel_encoder, WHEEL_BASE)
@@ -114,6 +123,11 @@ while not end:
     left_pwm = left_norm*max_speed
     right_pwm = right_norm*max_speed
 
+    # The MG49 Driver reads the speed in range 0 - 255. Values greater than 128 are "positive" speeds,
+    # while values between 0 and 128 are the negative ones. So, the 128 must be considered the speed 0.
+    left_pwm += 128
+    right_pwm += 128
+
     # Made a little step in the direction of the speed calculated by the Controller
     # This is made to prevent a huge speed change in a small space of time
     # Only change the PWM by 1 each step
@@ -125,8 +139,8 @@ while not end:
     last_right_pwm += right_dif if right_dif < MAX_PWM_STEP else MAX_PWM_STEP
 
     print(f"pwm_esquerdo: {last_left_pwm}\npwm_direito: {last_right_pwm}")
-    arduino.set_speed_left()
-    arduino.set_speed_right()
+    arduino.set_speed_left(last_left_pwm)
+    arduino.set_speed_right(last_right_pwm)
 
     # Add a plot
     line.set_offsets(np.c_[pose_log['x'], pose_log['y']])
@@ -136,8 +150,8 @@ while not end:
     # Limit to 10 frames per second. (100ms loop)
     clock.tick(FPS)
 
-arduino.send_data(f"pwm,0")
-arduino.send_data(f"dir,0")
+arduino.set_speed_left(0)
+arduino.set_speed_right(0)
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=pose_log['x'], y=pose_log['y'], mode='lines+markers', name='Trajetória'))

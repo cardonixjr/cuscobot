@@ -73,7 +73,7 @@ encoder = (((uint32_t)enc1a << 24) +
 ((uint32_t)enc1b << 16) +
 ((uint32_t)enc1c << 8) +
 ((uint32_t)enc1d << 0));
-Serial.println(encoder,DEC);
+Serial.println((int) encoder,DEC);
 delay(300);
 }
 if(roda==106)
@@ -97,7 +97,7 @@ encoder = (((uint32_t)enc1a << 24) +
 ((uint32_t)enc1b << 16) +
 ((uint32_t)enc1c << 8) +
 ((uint32_t)enc1d << 0));
-Serial.println(encoder,DEC);
+Serial.println((int) encoder,DEC);
 delay(300);
 }
 }
