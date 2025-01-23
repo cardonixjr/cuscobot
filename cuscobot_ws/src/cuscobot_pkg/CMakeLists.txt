@@ -8,14 +8,9 @@ project(cuscobot_pkg)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
-  nav_msgs
-  robot_state_publisher
   roscpp
   rospy
-  rviz
   std_msgs
-  tf2
 )
 
 ## System dependencies are found with CMake's conventions
@@ -75,7 +70,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   geometry_msgs#   nav_msgs#   std_msgs
+#   std_msgs
 # )
 
 ################################################
@@ -110,7 +105,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES cuscobot_pkg
-#  CATKIN_DEPENDS geometry_msgs nav_msgs robot_state_publisher roscpp rospy rviz std_msgs tf2
+#  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 

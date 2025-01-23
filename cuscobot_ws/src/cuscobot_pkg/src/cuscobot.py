@@ -1,11 +1,11 @@
 import rospy
-from std_msgs.msg import Int32
-import time, keyboard
+from std_msgs.msg import Int32, String
+import time
+#import keyboard
 import matplotlib.pyplot as plt
 import numpy as np
-import pygame
 import encoder, odometry, serialCom, goToGoal
-import plotly.graph_objects as go
+#import plotly.graph_objects as go
 
 # MG49 commands
 SET_SPEED_RIGHT = chr(100)
@@ -17,7 +17,7 @@ RESET_ENCODER = chr(114)
 
 # Robot info
 WHEEL_RADIUS = 0.06
-WHEEL_BASE = 0.335
+WHEEL_BASE = 0.37
 TICKS_PER_REVOLUTION = 980
 MAX_PWM = 48
 MAX_PWM_STEP = 10 # Maior mudança de PWM a cada loop. Isso igual a MAX_PWM é basicamente sem limitação de tamanho de passo.
@@ -28,7 +28,7 @@ step = 0
 goal = PATH[step]
 
 class DeadReckoningOdom():
-    def _init__(self):
+    def __init__(self):
         self.goal = goal
         self.path = PATH
         self.step = step
@@ -53,7 +53,7 @@ class DeadReckoningOdom():
         self.right_wheel_encoder = encoder.encoder(TICKS_PER_REVOLUTION, WHEEL_RADIUS)
 
         # update frequency fom publishing odom in Hz
-        self.updateFrequencyPublish = 10
+        self.updateFrequencyPublish = 1
 
         # Odometry
         self.odom = odometry.odometry(self.left_wheel_encoder, self.right_wheel_encoder, self.wheelBase)
@@ -88,7 +88,7 @@ class DeadReckoningOdom():
 
         # Publisher for writing arduino commands
         self.topicNamePublisher = "arduino_command"
-        self.commandPublisher = rospy.Publisher(topicName, Int32, queue_size=5)
+        self.commandPublisher = rospy.Publisher(self.topicNamePublisher, String, queue_size=5)
 
         # Rate publisher
         self.ratePublisher = rospy.Rate(self.updateFrequencyPublish)
@@ -109,18 +109,18 @@ class DeadReckoningOdom():
 
         # Run odometry step to update robot location
         self.odom.step()
-        self.x, self.y, self.theta = odom.getPose()
+        self.x, self.y, self.theta = self.odom.getPose()
 
         # Calculates the angular speed w
         self.w = self.controller.step(self.goal[0], self.goal[1], self.x, self.y, self.theta, dt, precision = 0.05)
         if self.w != None: self.last_w = self.w
         if self.w == None: # Se chegar ao destino, vai para o próximo ponto da trajetória 
-            if step+1 == len(PATH):  break  # Se chegar ao fim da trajetória, encerra o código
+        #    if step+1 == len(PATH):  break  # Se chegar ao fim da trajetória, encerra o código
             self.step += 1
             self.goal = self.PATH[step]
             #plt.scatter(goal[0], goal[1], marker='x', color='r')
             self.w = self.last_w
-        print(f"velocidade angular calculada: {w}")
+        print(f"velocidade angular calculada: {self.w}")
         
         left, right = odometry.uni_to_diff(5, self.w, self.left_wheel_encoder, self.right_wheel_encoder, self.wheelBase)
 
@@ -144,26 +144,26 @@ class DeadReckoningOdom():
         # Take a little step in the direction of the speed calculated by the Controller
         # This is made to prevent a huge speed change in a small space of time
         # Only change the PWM by 1 each step
-        left_dif = left_pwm - last_left_pwm
-        right_dif = right_pwm - last_right_pwm
+        left_dif = left_pwm - self.last_left_pwm
+        right_dif = right_pwm - self.last_right_pwm
 
-        last_left_pwm += left_dif if left_dif < MAX_PWM_STEP else MAX_PWM_STEP
-        last_right_pwm += right_dif if right_dif < MAX_PWM_STEP else MAX_PWM_STEP
+        self.last_left_pwm += left_dif if left_dif < MAX_PWM_STEP else MAX_PWM_STEP
+        self.last_right_pwm += right_dif if right_dif < MAX_PWM_STEP else MAX_PWM_STEP
 
-        print(f"pwm_esquerdo: {last_left_pwm}\npwm_direito: {last_right_pwm}")
+        print(f"pwm_esquerdo: {self.last_left_pwm}\npwm_direito: {self.last_right_pwm}")
 
         # Publish the speed
-        self.commandPublisher.publish(f"{SET_SPEED_LEFT}{last_left_pwm}")
-        self.commandPublisher.publish(f"{SET_SPEED_RIGHT}{last_right_pwm}")
+        self.commandPublisher.publish(f"{SET_SPEED_LEFT}{self.last_left_pwm}")
+        self.commandPublisher.publish(f"{SET_SPEED_RIGHT}{self.last_right_pwm}")
 
     def mainLoop(self):
         while not rospy.is_shutdown():
-            if keyboard.is_pressed('q'):
-                print("Keyboard interruption")
-                break
+            #if keyboard.is_pressed('q'):
+            #    print("Keyboard interruption")
+            #    break
             
             self.calculateUpdate()
-            self.Rate.sleep()
+            self.ratePublisher.sleep()
    
 
 if __name__ == "__main__":
