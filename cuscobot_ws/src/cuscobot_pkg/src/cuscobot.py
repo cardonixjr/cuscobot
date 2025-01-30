@@ -1,5 +1,5 @@
 import rospy
-from std_msgs.msg import Int32, String
+from std_msgs.msg import Int32, Empty
 import numpy as np
 import time
 # import keyboard
@@ -23,7 +23,7 @@ UPDATE_FREQUENCY = 1
 WHEEL_RADIUS = 0.06
 WHEEL_BASE = 0.37
 TICKS_PER_REVOLUTION = 980
-MAX_PWM = 48
+MAX_PWM = 40
 MAX_PWM_STEP = 10           # Biggest PWM step made each loop.
 MAX_SPEED_DISTANCE = 1      # Distance (meters) from goal before the robot start reducing its speed.
 
@@ -74,6 +74,9 @@ class DeadReckoningOdom():
         self.last_left_pwm = 128
         self.last_right_pwm = 128
 
+        # aux
+        self.is_first_loop = True
+
         # Plotting
         if PLOTTING:
             self.pose_log = {'x':[], 'y':[], 'theta':[]}
@@ -102,12 +105,17 @@ class DeadReckoningOdom():
         # Subscribers for receiving encoder readings
         rospy.Subscriber("left_encoder_pulses", Int32, self.callBackFunctionLeftEncoder)
         rospy.Subscriber("right_encoder_pulses", Int32, self.callBackFunctionRightEncoder)
-        
+
+        # Puvlishers
         self.leftPublisher = rospy.Publisher("left_wheel_pwm", Int32, queue_size=5)
         self.rightPublisher = rospy.Publisher("right_wheel_pwm", Int32, queue_size=5)
+        self.resetPublisher = rospy.Publisher("reset_encoder", Empty)
 
         # Rate publisher
-        self.ratePublisher = rospy.Rate(self.updateFrequencyPublish)
+        # self.ratePublisher = rospy.Rate(self.updateFrequencyPublish)
+
+        # Reset encoders
+        # self.resetEncoder()
 
     def callBackFunctionLeftEncoder(self, message1):
         ''' Callback function called when "left_encoder_pulses" topic receive a message'''
@@ -119,6 +127,10 @@ class DeadReckoningOdom():
         if message2.data:
             self.right_wheel_encoder.counter = message2.data
 
+    def stop(self):
+        self.leftPublisher.publish(128)
+        self.rightPublisher.publish(128)
+
     def calculateUpdate(self):
         ''' Function that executes in loop
             Reads the encoders and calculate the actual coordinates of the robot (odometry).
@@ -126,6 +138,7 @@ class DeadReckoningOdom():
             Apply the PID controll, returning a PWM value for each motor, 
             publishing it respective ROS topics.
         '''
+
         # Calculate how many ns passed since last read
         t = time.time_ns()
         dt = t - self.start_time
@@ -134,12 +147,13 @@ class DeadReckoningOdom():
         # Run odometry step to update robot location
         self.odom.step()
         self.x, self.y, self.theta = self.odom.getPose()
+        print(f"x: {self.x}, y:{self.y}, t:{self.theta}")
 
         # Calculates the angular speed w
         self.w = self.controller.step(self.goal[0], self.goal[1], self.x, self.y, self.theta, dt, precision = 0.05)
         if self.w != None: 
             self.last_w = self.w
-        print(f"velocidade angular calculada: {self.w}")
+        # print(f"velocidade angular calculada: {self.w}")
 
         # If reach the target, the controller will return None for angular speed
         # if this is the case, consider the last calculated speed
@@ -147,9 +161,9 @@ class DeadReckoningOdom():
             self.w = self.last_w
             # Then, check if there is a next coordinate to go in the path
             # If the path continues, makes the next point the goal
-            if step+1 < len(PATH):
-                step += 1
-                self.goal = PATH[step]
+            if self.step+1 < len(self.path):
+                self.step += 1
+                self.goal = self.path[self.step]
                 self.w = self.last_w
                 
                 # mark the new goal in the figure
@@ -160,6 +174,7 @@ class DeadReckoningOdom():
 
         # Convert the angular speed into differential speed for each wheel
         left_diff, right_diff = odometry.uni_to_diff(5, self.w, self.left_wheel_encoder, self.right_wheel_encoder, self.wheelBase)
+        # print(f"left_diff = {left_diff} , right_diff = {right_diff}")
 
         # Normalize the result speed
         if left_diff > right_diff:
@@ -168,6 +183,7 @@ class DeadReckoningOdom():
         else:
             left_norm = left_diff/right_diff
             right_norm = right_diff/right_diff
+        # print(f"norm_left = {left_norm},  norm_right = {right_norm}")
 
         # Calculates the maximum speed based on the distance of the robot for goal
         # This makes the robot "breakes" when get close to the target
@@ -180,29 +196,13 @@ class DeadReckoningOdom():
         left_pwm += 128
         right_pwm += 128
 
-        # Take a little step in the direction of the speed calculated by the Controller
-        # This is made to prevent a huge speed change in a small space of time
-        # Gets the difference from the new PWM and the last one.
-        delta_left = left_pwm - self.last_left_pwm
-        delta_right = right_pwm - self.last_right_pwm
+        self.last_left_pwm = left_pwm
+        self.last_right_pwm = right_pwm
 
-        # The new speed will be the last pwm + the step
-        left_command = self.last_left_pwm + delta_left if delta_left < MAX_PWM_STEP else MAX_PWM_STEP
-        right_command = self.last_right_pwm + delta_right if delta_right < MAX_PWM_STEP else MAX_PWM_STEP
+        self.leftPublisher.publish(int(left_pwm))
+        self.rightPublisher.publish(int(right_pwm))
 
-        # print(f"pwm_esquerdo: {left_command}\npwm_direito: {right_command}")
-
-        # Store the new PWM
-        self.last_left_pwm = left_command
-        self.last_right_pwm = right_command
-
-        # Publish the speed
-        self.leftPublisher.publish(int(left_command))
-        self.rightPublisher.publish(int(right_command))
-        
         ########## TESTE ##########
-        # self.leftPublisher.publish(168)
-        # self.rightPublisher.publish(168)
 
         # Add a point on plot figure
         if PLOTTING:
@@ -214,8 +214,6 @@ class DeadReckoningOdom():
             self.line.set_offsets(np.c_[self.pose_log['x'], self.pose_log['y']])
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
-
-            print(f"x: {self.x}, y:{self.y}, t:{self.theta}")
 
         # End the loop, keep running the code    
         return True
@@ -231,10 +229,14 @@ class DeadReckoningOdom():
             running = self.calculateUpdate()
             self.ratePublisher.sleep()
 
+        self.stop()
+
 if __name__ == "__main__":
     """ main """
     objectDR = DeadReckoningOdom()
     objectDR.mainLoop()
+    objectDR.stop()
 
     # rospy.on_shutdown(function)
+
 

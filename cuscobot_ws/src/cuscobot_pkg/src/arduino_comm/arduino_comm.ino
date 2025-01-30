@@ -1,5 +1,6 @@
+
 #include <ros.h>
-#include <std_msgs/String.h>
+#include <std_msgs/Empty.h>
 #include <std_msgs/Int32.h>
 
 #define CMD        (byte)0x00            // MD49 command address of 0                                 
@@ -45,8 +46,14 @@ void rightWheelCB(const std_msgs::Int32 &rightPWM){
   Serial1.write(rightPWM.data);
 }
 
+void resetEncoderCB(const std_msgs::Empty &command){
+  Serial1.write(CMD);
+  Serial1.write(ENC_RESET);
+}
+
 ros::Subscriber<std_msgs::Int32> leftWheelSubscriber("left_wheel_pwm", leftWheelCB );
 ros::Subscriber<std_msgs::Int32> rightWheelSubscriber("right_wheel_pwm", rightWheelCB );
+ros::Subscriber<std_msgs::Empty> encoderResetSubscriber("reset_encoder", resetEncoderCB);
 
 
 void setup()
@@ -63,6 +70,7 @@ void setup()
   nh.advertise(rightEncoderPublisher);
   nh.subscribe(leftWheelSubscriber);
   nh.subscribe(rightWheelSubscriber);
+  nh.subscribe(encoderResetSubscriber);
 }
 
 void loop()
@@ -118,3 +126,4 @@ void loop()
   nh.spinOnce();
   delay(500);
 }
+
