@@ -5,3 +5,7 @@ pyserial==3.5
 plotly==5.22.0
 keyboard==0.13.5
 numpy==1.26.4
+sys
+select
+termios
+tty

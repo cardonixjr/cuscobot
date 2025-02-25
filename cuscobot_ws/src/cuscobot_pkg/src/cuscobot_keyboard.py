@@ -1,13 +1,11 @@
 import rospy
-from std_msgs.msg import Int32, Empty
+from std_msgs.msg import Int32, Empty, String
 import numpy as np
 import time
-#import keyboard
 import matplotlib.pyplot as plt
-import encoder, odometry, goToGoal
+import encoder, odometry, keyboardControl
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-from pynput import keyboard
 
 # MG49 commands
 SET_SPEED_RIGHT = chr(100)
@@ -18,7 +16,7 @@ GET_RIGHT_ENCODER = chr(106)
 RESET_ENCODER = chr(114)
 
 # Frequency in Hz
-UPDATE_FREQUENCY = 1
+UPDATE_FREQUENCY = 100
 
 # Robot info
 WHEEL_RADIUS = 0.06
@@ -27,10 +25,11 @@ TICKS_PER_REVOLUTION = 980
 MAX_PWM = 40
 MAX_PWM_STEP = 30           # Biggest PWM step made each loop.
 MAX_SPEED_DISTANCE = 1      # Distance (meters) from goal before the robot start reducing its speed.
+ZERO_SPEED = 128
 
 PLOTTING = True
 
-PATH = [[1,1],[0,0]]      # An array of x and y coordinates that the robot must follow
+PATH = [[1,1]]      # An array of x and y coordinates that the robot must follow
 step = 0            # Index for the actual target
 goal = PATH[step]   # Actual target coordinate
 
@@ -55,6 +54,10 @@ class DeadReckoningOdom():
         self.wheelRadius = WHEEL_RADIUS
         self.wheelBase = WHEEL_BASE
 
+        # Keyboard
+        self.keyToPwm = keyboardControl.KeyToPWM()
+        self.key = ""
+
         # Encoders
         self.left_wheel_encoder = encoder.encoder(TICKS_PER_REVOLUTION, WHEEL_RADIUS)
         self.right_wheel_encoder = encoder.encoder(TICKS_PER_REVOLUTION, WHEEL_RADIUS)
@@ -65,21 +68,15 @@ class DeadReckoningOdom():
         self.y = 0
         self.theta = 0
 
-        # PID Controller
-        self.controller = goToGoal.GoToGoal()
-        self.w = 0      # Angular speed
-        self.last_w = 0
-
         # Time stamps
         self.start_time = time.time_ns()
         self.last_read = time.time()
 
-        # Published PWM
-        self.last_left_pwm = 128
-        self.last_right_pwm = 128
-
         # aux
         self.is_first_loop = True
+        self.executeOnce = True
+        self.left_pwm = 128
+        self.right_pwm = 128
 
         # Plotting
         if PLOTTING:
@@ -88,10 +85,8 @@ class DeadReckoningOdom():
             self.line = self.ax.scatter(self.pose_log['x'], self.pose_log['y'])
 
             plt.axis([-2,2,-2,2])
-            plt.scatter(self.goal[0], self.goal[1], marker='x', color='r')
             plt.show(block=False)
             plt.pause(.1)
-
 
         ############################## ROS DEFINITION ##############################
         # ROS Node name to this class
@@ -100,7 +95,11 @@ class DeadReckoningOdom():
         # ROS Topic names
         self.topicNameLeftEncoder = "left_encoder_pulses"
         self.topicNameRightEncoder = "right_encoder_pulses"
-        self.topicNamePublisher = "arduino_command"
+        self.topicNameKeyboard = "keyboard_input"
+
+        self.topicNameLeftPWM = "left_wheel_pwm"
+        self.topicNameRightPWM = "right_wheel_pwm"
+        self.topicNameResetEncoder = "reset_encoder"
 
         # ROS node
         rospy.init_node(self.nodeName, anonymous = True)
@@ -108,13 +107,14 @@ class DeadReckoningOdom():
         rospy.loginfo(f"The node - {self.nodeName} has started")
 
         # Subscribers for receiving encoder readings
-        rospy.Subscriber("left_encoder_pulses", Int32, self.callBackFunctionLeftEncoder)
-        rospy.Subscriber("right_encoder_pulses", Int32, self.callBackFunctionRightEncoder)
+        rospy.Subscriber(self.topicNameLeftEncoder, Int32, self.callBackFunctionLeftEncoder)
+        rospy.Subscriber(self.topicNameRightEncoder, Int32, self.callBackFunctionRightEncoder)
+        rospy.Subscriber(self.topicNameKeyboard, String, self.callbackKeyboard)
 
-        # Puvlishers
-        self.leftPublisher = rospy.Publisher("left_wheel_pwm", Int32, queue_size=5)
-        self.rightPublisher = rospy.Publisher("right_wheel_pwm", Int32, queue_size=5)
-        self.resetPublisher = rospy.Publisher("reset_encoder", Empty, queue_size = 1)
+        # Publishers
+        self.leftPublisher = rospy.Publisher(self.topicNameLeftPWM, Int32, queue_size=5)
+        self.rightPublisher = rospy.Publisher(self.topicNameRightPWM, Int32, queue_size=5)
+        self.resetPublisher = rospy.Publisher(self.topicNameResetEncoder, Empty, queue_size = 1)
 
         # Rate publisher
         self.ratePublisher = rospy.Rate(self.updateFrequencyPublish)
@@ -131,6 +131,11 @@ class DeadReckoningOdom():
         ''' Callback function called when "right_encoder_pulses" topic receive a message'''
         if message2.data:
             self.right_wheel_encoder.counter = message2.data
+
+    def callbackKeyboard(self,message3):
+        if message3.data:
+            self.executeOnce = True
+            self.key = message3.data
 
     def stop(self):
         self.leftPublisher.publish(128)
@@ -149,47 +154,24 @@ class DeadReckoningOdom():
         dt = t - self.start_time
         self.start_time = t
 
-        ############################## ODOMETRY ##############################
+        # Run odometry step to update robot location
         self.odom.step()
         self.x, self.y, self.theta = self.odom.getPose()
         print(f"x: {self.x}, y:{self.y}, t:{self.theta}")
 
-        ############################## PID ##############################
-        # Calculates the angular speed w
-        self.w = self.controller.step(self.goal[0], self.goal[1], self.x, self.y, self.theta, dt, precision = 0.05)
-        if self.w != None: 
-            self.last_w = self.w
+        # Run keyboard control        
+        if self.key == 'q': 
+            return False
 
-        # Check if reached the target
-        # If reach the target, the controller will return None for angular speed
-        # if this is the case, consider the last calculated speed
-        if self.w == None: 
-            self.w = self.last_w
-            
-            # Then, check if there is a next coordinate to go in the path
-            # If the path continues, makes the next point the goal
-            if self.step+1 < len(self.path):
-                self.step += 1
-                self.goal = self.path[self.step]
-                self.w = self.last_w
-                
-                # mark the new goal in the figure
-                plt.scatter(self.goal[0], self.goal[1], marker='x', color='r')
-            # If there is no more points in path, end the code
-            else: return False
+        if self.executeOnce:
+            self.left_pwm, self.right_pwm = self.keyToPwm.getSpeedByKey(self.key)
+            self.executeOnce = False
 
-        left_pwm, right_pwm = self.controller.w_to_pwm(self.w, self.left_wheel_encoder, self.right_wheel_encoder, self.wheelBase, 
-                                                       self.max_speed_distance, self.max_pwm, self.goal, self.x, self.y)
+        # Publish the PWM on ROS topic
+        self.leftPublisher.publish(int(self.left_pwm))
+        self.rightPublisher.publish(int(self.right_pwm))
 
-        ############################## ROS PUBLISH ##############################
-        # Store the new PWM value
-        self.last_left_pwm = left_pwm
-        self.last_right_pwm = right_pwm
-
-        self.leftPublisher.publish(int(left_pwm))
-        self.rightPublisher.publish(int(right_pwm))
-
-        ############################## PLOT ##############################
+        # Add a point on plot figure
         if PLOTTING:
             self.pose_log['x'].append(self.x)
             self.pose_log['y'].append(self.y)
@@ -204,41 +186,23 @@ class DeadReckoningOdom():
         return True
 
     def mainLoop(self):
+        running = True
+
         try:
-            running = True
+            while running and not rospy.is_shutdown():
+                running = self.calculateUpdate()
+                self.ratePublisher.sleep()
 
-            with keyboard.Events() as events:
-                while running and not rospy.is_shutdown():
-                    running = self.calculateUpdate()
-                    self.ratePublisher.sleep()
-
-                    while True:
-                        event = events.get(0.001)
-                        if event != None:
-                            print(type(event.key))
-                            if event.key.char == 'q':
-                                running = False
-                        if event == None: break
         except Exception as e:
             print(e)
 
         finally:
-            # Stop the robot
+            # End of execution
             self.resetPublisher.publish()
             self.stop()
 
-            # Plot
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=self.pose_log['x'], y=self.pose_log['y'], mode='lines+markers', name='Trajetória'))
-
-            for point in PATH:
-                fig.add_scatter(x=[point[0]],
-                    y=[point[1]],
-                    marker=dict(
-                        color='red',
-                        size=10,
-                        symbol="x-thin"
-                    ))
             fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X (metros)', yaxis_title='Posição Y (metros)')
             # Exibe o gráfico no navegador
             fig.show()
@@ -250,5 +214,4 @@ if __name__ == "__main__":
     objectDR.mainLoop()
     objectDR.stop()
 
-    # rospy.on_shutdown(function)
 
