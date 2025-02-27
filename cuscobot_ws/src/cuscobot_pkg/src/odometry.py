@@ -1,6 +1,10 @@
 import math
 
 class odometry():
+    '''
+        Class that defines a odometry calculator. receives the general robot dimensions and MD49 encoders readings
+        and calculates the actual coodinates of the robot (dead reckoning).
+    '''
 
     def __init__(self, el, er, L):
         '''

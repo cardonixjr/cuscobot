@@ -99,7 +99,7 @@ void loop()
   ((uint32_t)enc1b << 16) +
   ((uint32_t)enc1c << 8) +
   ((uint32_t)enc1d << 0));
-  leftEncoder.data = (int) encoder;
+  leftEncoder.data = (uint32_t) encoder;
   
   // Read Right Encoder 
   Serial1.write(CMD);
@@ -117,7 +117,7 @@ void loop()
   ((uint32_t)enc1b << 16) +
   ((uint32_t)enc1c << 8) +
   ((uint32_t)enc1d << 0));
-  rightEncoder.data = (int) encoder;
+  rightEncoder.data = (uint32_t) encoder;
   nh.spinOnce();
 
   leftEncoderPublisher.publish(&leftEncoder);

@@ -2,6 +2,16 @@ import math
 import odometry
 
 class GoToGoal:
+    '''
+        Class that define a closed loop Proportional Integrative and Derivative Control
+
+        The PID controler receives the actual value of robot coordinates (x, y) and orientation (theta)
+        and the goal coordinates (x_goal, y_goal) and calculates the angular velocity to corrects the
+        trajectory to move the robot closer to his goal.
+
+        Also have auxiliary functions to limit robot speed by the distance from the target and to
+        convert the angular velocity (w) into PWM values for both MD49 motors
+    '''
     def __init__(self):
         self.E_d = 0        # Error for the derivative term
         self.E_i = 0        # Error for the integrative term

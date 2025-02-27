@@ -23,22 +23,28 @@ CTRL-C para sair
 """
 
 class keyboardController():
+    '''
+    Class to read commands from keyboard and convert them into pwm commands for MG49 motors
+    Uses tty and termios to read keyboard pressed keys and publish them into a ROS topic called "keyboard_input"
+    '''
+
     def __init__(self):
-        '''
-        Class to read commands from keyboard and convert 
-        them into pwm commands for MG49 motors
-        '''
         self.settings = termios.tcgetattr(sys.stdin)
         print(msg)  
 
-        ### Create a ros pub for publishing the key pressed
+        ############################## ROS DEFINITION ##############################
+        # Node name
         self.nodeName = "KeyboardReader"
+
+        # Topic name
         self.topicName = "keyboard_input"
 
+        # Init node
         rospy.init_node(self.nodeName, anonymous=True)
         self.nodeName = rospy.get_name()
         rospy.loginfo(f"The node - {self.nodeName} has started")
 
+        # Init publisher
         self.keyPublisher = rospy.Publisher("keyboard_input", String, queue_size=5)
 
     def getKey(self):
@@ -51,6 +57,13 @@ class keyboardController():
 
     def close(self):
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
+
+
+
+
+
+
+
 
 class KeyToPWM():
     def __init__(self, base_pwm=128, pwm_dif=10, max_pwm=40):

@@ -8,6 +8,11 @@ GET_RIGHT_ENCODER = chr(106)
 RESET_ENCODER = chr(114)
 
 class Communication:
+    '''
+        Class that defines a serial communication between python and arduino.
+
+        This is not used since the implementation of ROS communication
+    '''
     def __init__(self, port, baudrate, timeout=0.1):
         self.baudrate = baudrate
         self.port = port
