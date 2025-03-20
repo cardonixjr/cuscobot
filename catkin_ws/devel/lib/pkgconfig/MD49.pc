@@ -1,0 +1,8 @@
+prefix=/home/luciano/catkin_ws/devel
+
+Name: MD49
+Description: Description of MD49
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
