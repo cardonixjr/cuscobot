@@ -1,7 +1,0 @@
-matplotlib==3.9.0
-matplotlib-inline==0.1.7
-pygame==2.6.1
-pyserial==3.5
-plotly==5.22.0
-keyboard==0.13.5
-numpy==1.26.4
