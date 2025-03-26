@@ -1,2 +1,0 @@
-MD49:rplidar_ros:teleop_twist_keyboard
--DCATKIN_DEVEL_PREFIX=/home/luciano/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/luciano/catkin_ws/install -G Unix Makefiles
