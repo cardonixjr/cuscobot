@@ -23,7 +23,6 @@ First of all, make sure your Debian package index is up-to-date:
 ```bash
 sudo apt update
 ```
-### Rosserial
 For this project, we use ROS Noetic, so, first check the ROS installation.
 
 ```bash
@@ -32,6 +31,7 @@ rosversion -d
 
 For more details about ROS noetic setup, check http://wiki.ros.org/noetic/Installation/Ubuntu
 
+### Rosserial
 Then, check the Rosserial installation
 
 ```bash
@@ -47,26 +47,48 @@ pip install matplotlib
 pip install plotly
 ```
 
+### RPLidar
+This project uses a Slamtec 2D Laser Scanner RPLIDAR A1. Install the packages for running RPLidar.
+
+```bash
+sudo apt install ros-noetic-rplidar-ros
+```
+
+### Teleop Twist Keyboard
+To control Cuscobot, we use keyboard commands, handle by the Teleop Twist Keyboard package for ROS. Install this package.
+
+```bash
+sudo apt-get install ros-noetic-teleop-twist-keyboard
+```
+
 ## 1.3 Create the catkin workspace
 
 ```bash
 cd ~
-mkdir cuscobot_ws
-cd ~/cuscobot_ws
+```
+
+```bash
+mkdir -p cuscobot_ws/src
+```
+
+```bash
+cd ~/cuscobot_ws/
+```
+
+```bash
+catkin_make
 ```
 
 ## 1.4 Clone this repository
 
-With ros and rosserial installed you should clone this repository.
+Clone this repository into your src folder inside your workspace
+
+```bash
+cd ~/cuscobot_ws/src
+```
 
 ```bash
 git clone https://github.com/cardonixjr/CuscoBot
-```
-
-And, then, you must rename the folder to match the catkin pattern.
-
-```bash
-mv CuscoBot src
 ```
 
 ## 1.5 Enviroment setup
@@ -76,6 +98,26 @@ You must source this script in every ~bash~ terminal you use ROS in.
 ```bash
 source /opt/ros/noetic/setup.bash
 ```
+
+## 1.6 Built enviroment
+### Run catkin_make 
+
+```bash
+cd ~/cuscobot_ws
+catkin_make
+```
+
+### Source packages
+*You must source this script in every bash terminal you use ROS.*
+
+```bash
+cd ~/cuscobot_ws
+source /opt/ros/noetic/setup.bash
+source devel/setup.bash
+. ~/cuscobot_ws/devel/setup.bash
+```
+
+## 1.8 Run packages
 
 ### Check serial-ports authority
 We'll use two serial ports in this project. One for the RPlidar, and one for Arduino MEGA.
@@ -102,24 +144,8 @@ Add the authority of write for Arduino port: (such as /dev/ttyACM0)
 sudo chmod 666 /dev/ttyACM0
 ```
 
-## 1.6 Built enviroment
-### Run catkin_make 
+### Run Cuscobot
 
-```bash
-cd ~/cuscobot_ws
-catkin_make
-```
-
-### Source packages
-You must source this script in every ~bash~ terminal you use ROS in. 
-
-```bash
-cd ~/cuscobot_ws
-source devel/setup.bash
-. ~/cuscobot_ws/devel/setup.bash
-```
-
-## 1.8 Run packages
 First, we initialize roscore and rosserial communication. Run this with Cuscobot and Lidar connected to your USB ports
 
 ```bash
