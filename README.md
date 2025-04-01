@@ -180,10 +180,10 @@ roslaunch rplidar_ros rplidar_a1.launch
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 ```
 
-### Run MD49 Odometry node
+### Run cuscobot Odometry node
 
 ```bash
-rosrun MD49 deadReckoning.py
+rosrun cuscobot deadReckoning.py
 ```
 
 ### Run rviz
