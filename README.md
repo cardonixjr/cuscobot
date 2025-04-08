@@ -92,7 +92,7 @@ cd ~/cuscobot_ws/src
 ```
 
 ```bash
-git clone https://github.com/cardonixjr/CuscoBot
+git clone https://github.com/cardonixjr/cuscobot.git
 ```
 
 ## 1.5 Enviroment setup
