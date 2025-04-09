@@ -54,12 +54,16 @@ This project uses a Slamtec 2D Laser Scanner RPLIDAR A1. Install the packages fo
 sudo apt install ros-noetic-rplidar-ros
 ```
 
+For more details about RPLidar setup, check https://wiki.ros.org/rplidar
+
 ### Teleop Twist Keyboard
 To control Cuscobot, we use keyboard commands, handle by the Teleop Twist Keyboard package for ROS. Install this package.
 
 ```bash
 sudo apt-get install ros-noetic-teleop-twist-keyboard
 ```
+
+For more details about Teleop_Twist_Keyboard setup, check https://wiki.ros.org/teleop_twist_keyboard
 
 ## 1.3 Create the catkin workspace
 
@@ -88,7 +92,7 @@ cd ~/cuscobot_ws/src
 ```
 
 ```bash
-git clone https://github.com/cardonixjr/CuscoBot
+git clone https://github.com/cardonixjr/cuscobot.git
 ```
 
 ## 1.5 Enviroment setup
@@ -176,10 +180,10 @@ roslaunch rplidar_ros rplidar_a1.launch
 rosrun teleop_twist_keyboard teleop_twist_keyboard.py
 ```
 
-### Run MD49 Odometry node
+### Run cuscobot Odometry node
 
 ```bash
-rosrun MD49 deadReckoning.py
+rosrun cuscobot deadReckoning.py
 ```
 
 ### Run rviz
