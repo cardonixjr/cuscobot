@@ -1,7 +1,9 @@
 #include <ros.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Float32.h>
 #include <geometry_msgs/Twist.h>
+#include <math.h>
 
 #define CMD (byte)0x00            // MD49 command address of 0                                 
 #define GET_SPEED1 0x21
@@ -24,8 +26,6 @@ int right_pwm;
 
 float linear;
 float angular;
-float left_speed;
-float right_speed;
 float left_norm;
 float right_norm;
 
@@ -48,41 +48,20 @@ void cmdVelCallback(const geometry_msgs::Twist& cmd_vel){
   linear = cmd_vel.linear.x;
   angular = cmd_vel.angular.z;
 
-  float right_linear = ((linear/2) + (angular/BASE_LENGTH))/2;
-  float left_linear =  (linear/2) - right_linear;
-  
-  left_pwm = map(left_linear, -0.7326,0,0.7326,254);
-  right_pwm = map(right_linear, -0.7326, 0, 0.7326, 254);
+  float right_linear = ((linear*2) + (angular*BASE_LENGTH))/2;
+  float left_linear =  (linear*2) - right_linear;
 
-  // Calculates speed
-  /*
-  left_speed = (2 * linear + angular * BASE_LENGTH)/(2*WHEEL_RADIUS);
-  right_speed = (2 * linear - angular * BASE_LENGTH)/(2*WHEEL_RADIUS);
+  left_pwm = (int) round((left_linear + 0.7326) * (255 - 0) / (0.7326 + 0.7326));
+  right_pwm = (int) round((right_linear + 0.7326) * (255 - 0) / (0.7326 + 0.7326));
 
-  int ls = left_speed/abs(left_speed);
-  int rs = right_speed/abs(right_speed);
-
-  if(abs(left_speed) > abs(right_speed)){
-    left_norm = abs(left_speed)/abs(left_speed);
-    right_norm = right_speed/left_speed;
-  } else {
-    right_norm = abs(right_speed)/abs(right_speed);
-    left_norm = abs(left_speed)/abs(right_speed);
-  }
-
-  // implement speed limit by distance
-  left_pwm = (int) left_norm*MAX_PWM * ls + 128;
-  right_pwm = (int) right_norm*MAX_PWM * rs + 128;
-  */
 
   Serial1.write(CMD);
   Serial1.write(SET_SPEED1);
-  Serial1.write((int) left_pwm);
-
+  Serial1.write(left_pwm);
+  
   Serial1.write(CMD);
   Serial1.write(SET_SPEED2);
-  Serial1.write((int) right_pwm);
-
+  Serial1.write(right_pwm);
 }
 
 void resetEncoderCB(const std_msgs::Empty &command){
@@ -95,8 +74,8 @@ ros::Subscriber<std_msgs::Empty> encoderResetSubscriber("reset_encoder", resetEn
 
 void setup()
 {
-
-  Serial.begin(57600);
+  pinMode(LED_BUILTIN, OUTPUT);
+  // Serial.begin(57600);
   // SERIAL
   Serial1.begin(9600);
   Serial1.write(CMD);
@@ -153,12 +132,8 @@ void loop()
 
   leftEncoderPublisher.publish(&leftEncoder);
   rightEncoderPublisher.publish(&rightEncoder);
+  
   nh.spinOnce();
-
-  //CALCULO DO PID DOS PWM
-
-
-
-
   delay(500);
+  
 }
