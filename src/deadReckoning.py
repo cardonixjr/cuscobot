@@ -40,7 +40,7 @@ class DeadReckoningOdom():
         self.right_wheel_encoder = encoder.encoder(TICKS_PER_REVOLUTION, WHEEL_RADIUS)
 
         # Odometry
-        self.odom = odom_utls.odometry(self.left_wheel_encoder, self.right_wheel_encoder, self.wheelBase, self.wheelRadius)
+        self.odom = odom_utls.odometry(self.left_wheel_encoder, self.right_wheel_encoder, self.wheelBase)
         self.x = 0
         self.y = 0
         self.theta = 0
@@ -131,7 +131,7 @@ class DeadReckoningOdom():
 
         # Get speed values
         self.v, self.w = self.odom.getSpeed()
-        print(f"v: {self.v}, w: {self.w}")
+        # print(f"v: {self.v}, w: {self.w}")
 
         # Built Odom and transform messages
         # since all odometry is 6DOF we'll need a quaternion created from yaw

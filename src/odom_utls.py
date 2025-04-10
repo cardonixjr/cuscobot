@@ -6,7 +6,7 @@ class odometry():
         and calculates the actual coodinates of the robot (dead reckoning).
     '''
 
-    def __init__(self, el, er, L, R):
+    def __init__(self, el, er, L):
         '''
             Initialize odometry
             
@@ -18,7 +18,6 @@ class odometry():
         self.el = el
         self.er = er
         self.L = L
-        self.R = R
         self.wl_last_counter = 0
         self.wr_last_counter = 0
         
@@ -63,20 +62,25 @@ class odometry():
         self.y = self.y + y_dt
         self.theta = self.theta + theta_dt
 
-        # Calculate Angular Velocity
-        left_angular_speed = Dl/dt
-        right_angular_speed = Dr/dt
+#        # Calculate Angular Velocity
+#        left_angular_speed = Dl/dt
+#        right_angular_speed = Dr/dt
 
-        # Calculate linear velocity
-        left_linear_speed = self.R*left_angular_speed
-        right_linear_speed = self.R*right_angular_speed
+#        # Calculate linear velocity
+#        left_linear_speed = self.el.radius*left_angular_speed
+#        right_linear_speed = self.er.radius*right_angular_speed
+
+        left_linear_speed = Dl/dt
+        right_linear_speed = Dr/dt
 
         # Robot center velocity
-        self.v = (left_linear_speed + right_linear_speed)/2
+        self.v = ((left_linear_speed + right_linear_speed)/2)*10**9
 
         #Robot angular velocity
-        self.w = (right_linear_speed - left_linear_speed)/self.L
+        self.w = ((right_linear_speed - left_linear_speed)/self.L)*10**9
         
+        print(f"v: {self.v} , w: {self.w}")
+
         return self.x, self.y, self.theta
         
     def resetPose(self):
