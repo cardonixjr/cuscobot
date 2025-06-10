@@ -5,6 +5,7 @@ import rospy
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from std_msgs.msg import String, Int32, Empty
 from nav_msgs.msg import Odometry as Odom
+from sensor_msgs.msg import JointState
 import tf
 
 # Other project classes and functions
@@ -20,7 +21,7 @@ import numpy as np
 import time
 
 # Plotting
-PLOTTING = True
+PLOTTING = False
 
 class DeadReckoningOdom():
     '''
@@ -71,10 +72,15 @@ class DeadReckoningOdom():
         ############################## ROS DEFINITION ##############################
         # ROS Node name to this class
         self.nodeName = "DeadReckoningOdom"
+
         # ROS Topic names
         self.topicNameLeftEncoder = "left_encoder_pulses"
         self.topicNameRightEncoder = "right_encoder_pulses"
         self.topicNameResetEncoder = "reset_encoder"
+
+        # Frame names for broadcasting odometry
+        self.baseFrameName = rospy.get_param('~base_frame_id','base_link')
+        self.odomFrameName = rospy.get_param('~odom_frame_id','odom_link')
 
         # ROS node
         rospy.init_node(self.nodeName, anonymous = True)
@@ -88,8 +94,12 @@ class DeadReckoningOdom():
         # Publishers
         self.resetPublisher = rospy.Publisher(self.topicNameResetEncoder, Empty, queue_size = 1)
 
+        # Vibrational motors publishers
+        self.left_vib_pub = rospy.Publisher("left_vib_msg", Int32, queue_size=5)
+        self.right_vib_pub = rospy.Publisher("right_vib_msg", Int32, queue_size=5)
+
         # Odometry publishers
-        self.odom_pub = rospy.Publisher("odom", Odom, queue_size=20)
+        self.odom_pub = rospy.Publisher("odom", Odom, queue_size=5)
         self.odom_broadcaster = tf.TransformBroadcaster()
 
         # Rate publisher
@@ -127,42 +137,71 @@ class DeadReckoningOdom():
         # Run odometry step to update robot location
         self.odom.step(dt)
         self.x, self.y, self.theta = self.odom.getPose()
-        print(f"x: {self.x}, y:{self.y}, t:{self.theta}")
+#        print(f"x: {self.x}, y:{self.y}, t:{self.theta}")
 
         # Get speed values
         self.v, self.w = self.odom.getSpeed()
         # print(f"v: {self.v}, w: {self.w}")
 
-        # Built Odom and transform messages
+        # Built Odom and TF messages
         # since all odometry is 6DOF we'll need a quaternion created from yaw
-        odom_quat = tf.transformations.quaternion_from_euler(0,0,self.theta)
+#        odom_quat = tf.transformations.quaternion_from_euler(0,0,self.theta)
 
-        odom = Odom()
-        odom.header.stamp = current_time
-        odom.header.frame_id = "odom"
+#        odom = Odom()
+#        odom.header.stamp = current_time
+#        odom.header.frame_id = "odom"
 
         # set the position
-        odom.pose.pose = Pose(Point(self.x, self.y, 0), Quaternion(*odom_quat))
+#        odom.pose.pose = Pose(Point(self.x, self.y, 0), Quaternion(*odom_quat))
 
         # set the velocity
-        odom.child_frame_id = "base_link"
-        odom.twist.twist = Twist(Vector3(self.v, 0, 0), Vector3(0,0,self.w))
+#        odom.child_frame_id = "base_link"
+#        odom.twist.twist = Twist(Vector3(self.v, 0, 0), Vector3(0,0,self.w))
+
+        quaternion1 = Quaternion()
+        quaternion1.x = 0
+        quaternion1.y = 0
+        quaternion1.z = np.sin(self.theta/2)
+        quaternion1.w = np.cos(self.theta/2)
+        quaternionTuple = (quaternion1.x, quaternion1.y,quaternion1.z,quaternion1.w)
+
+        self.odom_broadcaster.sendTransform(
+            (self.x, self.y, 0),
+            quaternionTuple,
+            current_time,
+            self.baseFrameName,
+            self.odomFrameName)
+        
+        odometry = Odom()
+        odometry.header.stamp = current_time
+        odometry.pose.pose.position.x = self.x
+        odometry.pose.pose.position.y = self.y
+        odometry.pose.pose.position.z = 0
+        odometry.pose.pose.orientation = quaternion1
+        odometry.child_frame_id = self.baseFrameName
+        odometry.twist.twist.linear.x = self.v
+        odometry.twist.twist.linear.y = 0
+        odometry.twist.twist.angular.z = self.w
+
+        # publish Odom
+        self.odom_pub.publish(odometry)
+
 
         # Reset variables
         self.last_theta = self.theta
 
         ############################## ROS PUBLISHERS ##############################
         # publish the transform over tf
-        self.odom_broadcaster.sendTransform(
-            (self.x, self.y, 0),
-            odom_quat,
-            current_time,
-            "base_link",
-            "odom"
-        )
+#        self.odom_broadcaster.sendTransform(
+#            (self.x, self.y, 0),
+#            odom_quat,
+#            current_time,
+#            "base_link",
+#            "odom"
+#        )
 
-        # publish Odom
-        self.odom_pub.publish(odom)
+#        # publish Odom
+#        self.odom_pub.publish(odom)
 
         ############################## PLOTTING ##############################
         if PLOTTING:

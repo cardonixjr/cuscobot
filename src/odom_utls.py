@@ -79,7 +79,7 @@ class odometry():
         #Robot angular velocity
         self.w = ((right_linear_speed - left_linear_speed)/self.L)*10**9
         
-        print(f"v: {self.v} , w: {self.w}")
+        #print(f"v: {self.v} , w: {self.w}")
 
         return self.x, self.y, self.theta
         

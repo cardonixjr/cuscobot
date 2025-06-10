@@ -112,23 +112,31 @@ void cmdVelCallback(const geometry_msgs::Twist& cmd_vel){
   right_pwm = (int) round((right_linear + 0.7326) * (255 - 0) / (0.7326 + 0.7326));
 
   // Execute only if capacitive sensor is being hold
-  if(isCapacitivePressed){
-    Serial1.write(CMD);
-    Serial1.write(SET_SPEED1);
-    Serial1.write(left_pwm);
+  // if(isCapacitivePressed){
+  //   Serial1.write(CMD);
+  //   Serial1.write(SET_SPEED1);
+  //   Serial1.write(left_pwm);
     
-    Serial1.write(CMD);
-    Serial1.write(SET_SPEED2);
-    Serial1.write(right_pwm);
-  } else {
-    Serial1.write(CMD);
-    Serial1.write(SET_SPEED1);
-    Serial1.write(128);
+  //   Serial1.write(CMD);
+  //   Serial1.write(SET_SPEED2);
+  //   Serial1.write(right_pwm);
+  // } else {
+  //   Serial1.write(CMD);
+  //   Serial1.write(SET_SPEED1);
+  //   Serial1.write(128);
     
-    Serial1.write(CMD);
-    Serial1.write(SET_SPEED2);
-    Serial1.write(128);
-  }
+  //   Serial1.write(CMD);
+  //   Serial1.write(SET_SPEED2);
+  //   Serial1.write(128);
+  // }
+  
+  Serial1.write(CMD);
+  Serial1.write(SET_SPEED1);
+  Serial1.write(left_pwm);
+    
+  Serial1.write(CMD);
+  Serial1.write(SET_SPEED2);
+  Serial1.write(right_pwm);
 }
 
 void resetEncoderCB(const std_msgs::Empty &command){
@@ -272,39 +280,21 @@ void loop(){
   isTouching.data = (bool) isCapacitivePressed;
   nh.spinOnce();
 
-
-  if(!isCapacitivePressed){
-    Serial1.write(CMD);
-    Serial1.write(SET_SPEED1);
-    Serial1.write(128);
+  // if(!isCapacitivePressed){
+  //   Serial1.write(CMD);
+  //   Serial1.write(SET_SPEED1);
+  //   Serial1.write(128);
     
-    Serial1.write(CMD);
-    Serial1.write(SET_SPEED2);
-    Serial1.write(128);
-  }
-
-
+  //   Serial1.write(CMD);
+  //   Serial1.write(SET_SPEED2);
+  //   Serial1.write(128);
+  // }
 
     /********** Publish data ***********/
   leftEncoderPublisher.publish(&leftEncoder);
   rightEncoderPublisher.publish(&rightEncoder);
   strainGaugePublisher.publish(&strainGaugeReading);
   capacitivePublisher.publish(&isTouching);
-}
-
-void MotorSentidoHorario(){
-  digitalWrite(motorA_EN, HIGH); //Motor A. HIGH = HORARIO
-  digitalWrite(motorB_EN, HIGH); //Motor B. HIGH = HORARIO
-  
-  analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
-  analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
-}
-
-void MotorSentidoAntiHorario(){ 
-  digitalWrite(motorA_EN, LOW); //Motor A. LOW = ANTI-HORÁRIO
-  digitalWrite(motorB_EN, LOW); //Motor B. LOW = ANTI-HORÁRIO
-  analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
-  analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
 }
 
 int average(){
