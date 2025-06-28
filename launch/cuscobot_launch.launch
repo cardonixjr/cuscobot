@@ -24,4 +24,6 @@
 	<param name="baud"              type="int"                  value="57600"/>
 	</node>
 
+	<!-- RVIZ -->
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find cuscobot)/urdf/config.rviz" required="true" />
 </launch>
