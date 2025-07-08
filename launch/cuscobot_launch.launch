@@ -10,10 +10,10 @@
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
 	<!-- Starting Teleop node -->
-	<node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" />
+	<!-- <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" /> -->
 
 	<!-- Starting Odometry and TF publisher node -->
-	<node pkg="cuscobot" type="deadReckoning.py" name="odometry" output="screen"/>
+	<node pkg="cuscobot" type="deadReckoning.py" name="odom" output="screen"/>
 
 	<!-- Starting RPLidar node -->
 	<include file="$(find rplidar_ros)/launch/rplidar_a1.launch" />
@@ -25,5 +25,5 @@
 	</node>
 
 	<!-- RVIZ -->
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find cuscobot)/urdf/config.rviz" required="true" />
+	<!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find cuscobot)/urdf/config.rviz" required="true" /> -->
 </launch>

@@ -2,11 +2,12 @@
 
 # ROS
 import rospy
-from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
+from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3, TransformStamped
 from std_msgs.msg import String, Int32, Empty
 from nav_msgs.msg import Odometry as Odom
-from sensor_msgs.msg import JointState
-import tf
+import tf_conversions
+import tf2_ros as tf2
+#import tf
 
 # Other project classes and functions
 import encoder, odom_utls
@@ -99,8 +100,8 @@ class DeadReckoningOdom():
         self.right_vib_pub = rospy.Publisher("right_vib_msg", Int32, queue_size=5)
 
         # Odometry publishers
-        self.odom_pub = rospy.Publisher("odom", Odom, queue_size=5)
-        self.odom_broadcaster = tf.TransformBroadcaster()
+        self.odom_pub = rospy.Publisher("odom", Odom, queue_size=10)
+        self.odom_broadcaster = tf2.TransformBroadcaster()
 
         # Rate publisher
         self.ratePublisher = rospy.Rate(self.updateFrequencyPublish)
@@ -145,46 +146,60 @@ class DeadReckoningOdom():
 
         # Built Odom and TF messages
         # since all odometry is 6DOF we'll need a quaternion created from yaw
-#        odom_quat = tf.transformations.quaternion_from_euler(0,0,self.theta)
+        odom_quat = tf_conversions.transformations.quaternion_from_euler(0,0,self.theta)
 
-#        odom = Odom()
-#        odom.header.stamp = current_time
-#        odom.header.frame_id = "odom"
+        odom = Odom()
+        odom.header.stamp = current_time
+        odom.header.frame_id = "odom_link"
 
         # set the position
-#        odom.pose.pose = Pose(Point(self.x, self.y, 0), Quaternion(*odom_quat))
+        odom.pose.pose = Pose(Point(self.x, self.y, 0), Quaternion(*odom_quat))
 
         # set the velocity
-#        odom.child_frame_id = "base_link"
-#        odom.twist.twist = Twist(Vector3(self.v, 0, 0), Vector3(0,0,self.w))
+        odom.child_frame_id = "base_link"
+        odom.twist.twist = Twist(Vector3(self.v, 0, 0), Vector3(0,0,self.w))
 
-        quaternion1 = Quaternion()
-        quaternion1.x = 0
-        quaternion1.y = 0
-        quaternion1.z = np.sin(self.theta/2)
-        quaternion1.w = np.cos(self.theta/2)
-        quaternionTuple = (quaternion1.x, quaternion1.y,quaternion1.z,quaternion1.w)
+#        quaternion1 = Quaternion()
+#        quaternion1.x = 0
+#        quaternion1.y = 0
+#        quaternion1.z = np.sin(self.theta/2)
+#        quaternion1.w = np.cos(self.theta/2)
+#        quaternionTuple = (quaternion1.x, quaternion1.y,quaternion1.z,quaternion1.w)
+#
+#        self.odom_broadcaster.sendTransform(
+#            (self.x, self.y, 0),
+#            quaternionTuple,
+#            current_time,
+#            self.baseFrameName,
+#            self.odomFrameName)
+#        
+#        odometry = Odom()
+#        odometry.header.stamp = current_time
+#        odometry.pose.pose.position.x = self.x
+#        odometry.pose.pose.position.y = self.y
+#        odometry.pose.pose.position.z = 0
+#        odometry.pose.pose.orientation = quaternion1
+#        odometry.child_frame_id = self.baseFrameName
+#        odometry.twist.twist.linear.x = self.v
+#        odometry.twist.twist.linear.y = 0
+#        odometry.twist.twist.angular.z = self.w
 
-        self.odom_broadcaster.sendTransform(
-            (self.x, self.y, 0),
-            quaternionTuple,
-            current_time,
-            self.baseFrameName,
-            self.odomFrameName)
-        
-        odometry = Odom()
-        odometry.header.stamp = current_time
-        odometry.pose.pose.position.x = self.x
-        odometry.pose.pose.position.y = self.y
-        odometry.pose.pose.position.z = 0
-        odometry.pose.pose.orientation = quaternion1
-        odometry.child_frame_id = self.baseFrameName
-        odometry.twist.twist.linear.x = self.v
-        odometry.twist.twist.linear.y = 0
-        odometry.twist.twist.angular.z = self.w
+         # publish Odom
+#        self.odom_pub.publish(odometry)
 
-        # publish Odom
-        self.odom_pub.publish(odometry)
+        t = TransformStamped()
+        t.header.stamp = current_time
+        t.header.frame_id = self.odomFrameName
+        t.child_frame_id = self.baseFrameName
+        t.transform.translation.x = self.x
+        t.transform.translation.y = self.y
+        t.transform.translation.z = 0.0
+        q = tf_conversions.transformations.quaternion_from_euler(0,0,self.theta)
+        t.transform.rotation.x = q[0]
+        t.transform.rotation.y = q[1]
+        t.transform.rotation.z = q[2]
+        t.transform.rotation.w = q[3]
+        self.odom_broadcaster.sendTransform(t)
 
 
         # Reset variables
@@ -197,11 +212,11 @@ class DeadReckoningOdom():
 #            odom_quat,
 #            current_time,
 #            "base_link",
-#            "odom"
+#            "odom_link"
 #        )
 
-#        # publish Odom
-#        self.odom_pub.publish(odom)
+        # publish Odom
+        self.odom_pub.publish(odom)
 
         ############################## PLOTTING ##############################
         if PLOTTING:
@@ -229,11 +244,12 @@ class DeadReckoningOdom():
             self.resetPublisher.publish()
             #self.stop()
 
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=self.pose_log['x'], y=self.pose_log['y'], mode='lines+markers', name='Trajetória'))
-            fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X (metros)', yaxis_title='Posição Y (metros)')
-            # Exibe o gráfico no navegador
-            fig.show()
+            if PLOTTING:
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=self.pose_log['x'], y=self.pose_log['y'], mode='lines+markers', name='Trajetória'))
+                fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X (metros)', yaxis_title='Posição Y (metros)')
+                # Exibe o gráfico no navegador
+                fig.show()
 
 
 if __name__ == "__main__":

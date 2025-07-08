@@ -9,7 +9,7 @@ GET_RIGHT_ENCODER = chr(106)
 RESET_ENCODER = chr(114)
 
 # Frequency in Hz
-UPDATE_FREQUENCY = 1
+UPDATE_FREQUENCY = 10
 
 # Robot info
 WHEEL_RADIUS = 0.06

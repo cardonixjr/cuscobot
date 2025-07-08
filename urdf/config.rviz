@@ -184,7 +184,7 @@ Visualization Manager:
       Draw Behind: false
       Enabled: true
       Name: Map
-      Topic: /map
+      Topic: map
       Unreliable: false
       Use Timestamp: false
       Value: true
@@ -328,7 +328,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Default Light: true
-    Fixed Frame: odom_link
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
