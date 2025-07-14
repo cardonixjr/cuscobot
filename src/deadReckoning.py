@@ -14,8 +14,8 @@ import encoder, odom_utls
 from PRESETS import *
 
 # Plotting
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
+#import matplotlib.pyplot as plt
+#import plotly.graph_objects as go
 
 # Aux
 import numpy as np
@@ -61,14 +61,14 @@ class DeadReckoningOdom():
         self.right_pwm = 128
 
         # Plotting
-        if PLOTTING:
-            self.pose_log = {'x':[], 'y':[], 'theta':[]}
-            self.fig, self.ax = plt.subplots()
-            self.line = self.ax.scatter(self.pose_log['x'], self.pose_log['y'])
+        #if PLOTTING:
+        #    self.pose_log = {'x':[], 'y':[], 'theta':[]}
+        #    self.fig, self.ax = plt.subplots()
+        #    self.line = self.ax.scatter(self.pose_log['x'], self.pose_log['y'])
 
-            plt.axis([-2,2,-2,2])
-            plt.show(block=False)
-            plt.pause(.1)
+        #    plt.axis([-2,2,-2,2])
+        #    plt.show(block=False)
+        #    plt.pause(.1)
 
         ############################## ROS DEFINITION ##############################
         # ROS Node name to this class
@@ -159,34 +159,6 @@ class DeadReckoningOdom():
         odom.child_frame_id = "base_link"
         odom.twist.twist = Twist(Vector3(self.v, 0, 0), Vector3(0,0,self.w))
 
-#        quaternion1 = Quaternion()
-#        quaternion1.x = 0
-#        quaternion1.y = 0
-#        quaternion1.z = np.sin(self.theta/2)
-#        quaternion1.w = np.cos(self.theta/2)
-#        quaternionTuple = (quaternion1.x, quaternion1.y,quaternion1.z,quaternion1.w)
-#
-#        self.odom_broadcaster.sendTransform(
-#            (self.x, self.y, 0),
-#            quaternionTuple,
-#            current_time,
-#            self.baseFrameName,
-#            self.odomFrameName)
-#        
-#        odometry = Odom()
-#        odometry.header.stamp = current_time
-#        odometry.pose.pose.position.x = self.x
-#        odometry.pose.pose.position.y = self.y
-#        odometry.pose.pose.position.z = 0
-#        odometry.pose.pose.orientation = quaternion1
-#        odometry.child_frame_id = self.baseFrameName
-#        odometry.twist.twist.linear.x = self.v
-#        odometry.twist.twist.linear.y = 0
-#        odometry.twist.twist.angular.z = self.w
-
-         # publish Odom
-#        self.odom_pub.publish(odometry)
-
         t = TransformStamped()
         t.header.stamp = current_time
         t.header.frame_id = self.odomFrameName
@@ -201,33 +173,22 @@ class DeadReckoningOdom():
         t.transform.rotation.w = q[3]
         self.odom_broadcaster.sendTransform(t)
 
-
         # Reset variables
         self.last_theta = self.theta
-
-        ############################## ROS PUBLISHERS ##############################
-        # publish the transform over tf
-#        self.odom_broadcaster.sendTransform(
-#            (self.x, self.y, 0),
-#            odom_quat,
-#            current_time,
-#            "base_link",
-#            "odom_link"
-#        )
 
         # publish Odom
         self.odom_pub.publish(odom)
 
         ############################## PLOTTING ##############################
-        if PLOTTING:
-            self.pose_log['x'].append(self.x)
-            self.pose_log['y'].append(self.y)
-            self.pose_log['theta'].append(self.theta)
-
-            # Add a plot
-            self.line.set_offsets(np.c_[self.pose_log['x'], self.pose_log['y']])
-            self.fig.canvas.draw()
-            self.fig.canvas.flush_events()
+        #if PLOTTING:
+        #    self.pose_log['x'].append(self.x)
+        #    self.pose_log['y'].append(self.y)
+        #    self.pose_log['theta'].append(self.theta)
+#
+        #    # Add a plot
+        #    self.line.set_offsets(np.c_[self.pose_log['x'], self.pose_log['y']])
+        #    self.fig.canvas.draw()
+        #    self.fig.canvas.flush_events()
 
     def mainLoop(self):
 
@@ -244,12 +205,12 @@ class DeadReckoningOdom():
             self.resetPublisher.publish()
             #self.stop()
 
-            if PLOTTING:
-                fig = go.Figure()
-                fig.add_trace(go.Scatter(x=self.pose_log['x'], y=self.pose_log['y'], mode='lines+markers', name='Trajetória'))
-                fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X (metros)', yaxis_title='Posição Y (metros)')
-                # Exibe o gráfico no navegador
-                fig.show()
+            #if PLOTTING:
+            #    fig = go.Figure()
+            #    fig.add_trace(go.Scatter(x=self.pose_log['x'], y=self.pose_log['y'], mode='lines+markers', name='Trajetória'))
+            #    fig.update_layout(title='Trajetória do Robô Móvel', xaxis_title='Posição X (metros)', yaxis_title='Posição Y (metros)')
+            #    # Exibe o gráfico no navegador
+            #    fig.show()
 
 
 if __name__ == "__main__":
