@@ -1,4 +1,4 @@
-image: /home/luciano/cuscobot_ws/src/cuscobot/maps/mapahector.pgm
+image: mapahector.pgm
 resolution: 0.025000
 origin: [-12.800012, -12.800012, 0.000000]
 negate: 0
