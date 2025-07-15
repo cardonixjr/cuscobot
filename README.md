@@ -52,10 +52,6 @@ For more details about RPLidar setup, check https://wiki.ros.org/rplidar
 The navigation algorithm used is the AMCL. Istall the packages for this ROS library:
 
 ```bash
-sudo apt-get install ros-noetic-navigation
-```
-
-```bash
 sudo apt-get install ros-noetic-map-server
 ```
 ```bash
