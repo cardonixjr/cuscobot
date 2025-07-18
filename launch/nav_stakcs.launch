@@ -4,7 +4,7 @@
   <master auto="start"/>
 
   <!-- Arguments -->
-  <arg name="map_file" default="$(find cuscobot)/maps/blank_map_with_obstacle.yaml"/>  
+  <arg name="map_file" default="$(find cuscobot)/maps/blank_map.yaml"/>  
 
   <!-- Map server-->
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
