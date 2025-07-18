@@ -39,14 +39,6 @@ rosversion rosserial
 ```
 For more details about rosserial setup, check http://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup
 
-### Python plot libraries
-Finally, pip install the python plotting libraries
-
-```bash
-pip install matplotlib
-pip install plotly
-```
-
 ### RPLidar
 This project uses a Slamtec 2D Laser Scanner RPLIDAR A1. Install the packages for running RPLidar.
 
@@ -55,6 +47,23 @@ sudo apt install ros-noetic-rplidar-ros
 ```
 
 For more details about RPLidar setup, check https://wiki.ros.org/rplidar
+
+### AMCL dependencies
+The navigation algorithm used is the AMCL. Istall the packages for this ROS library:
+
+```bash
+sudo apt-get install ros-noetic-map-server
+```
+```bash
+
+sudo apt-get install ros-noetic-move-base
+```
+
+```bash
+sudo apt-get install ros-noetic-amcl
+```
+
+For more details about AMCL setup, check http://wiki.ros.org/amcl
 
 ### Teleop Twist Keyboard
 To control Cuscobot, we use keyboard commands, handle by the Teleop Twist Keyboard package for ROS. Install this package.
@@ -118,7 +127,6 @@ catkin_make
 cd ~/cuscobot_ws
 source /opt/ros/noetic/setup.bash
 source devel/setup.bash
-. ~/cuscobot_ws/devel/setup.bash
 ```
 
 ## 1.8 Run packages
@@ -150,55 +158,23 @@ sudo chmod 666 /dev/ttyACM0
 
 ### Run Cuscobot
 
-First, we initialize roscore and rosserial communication. Run this with Cuscobot and Lidar connected to your USB ports
+First, we initialize roscore.
 
 ```bash
 roscore
 ```
 
-In a separated terminal, run:
+In a separated terminal, we initialize the cuscobot core algorith. Run this with Cuscobot and Lidar connected to your USB ports.
+
 
 ```bash
-rosrun rosserial_python serial_node.py /dev/ttyACM0
+roslaunch cuscobot cuscobot_launch.launch
 ```
 
-You should run each node in a separated terminal. In all of them, enter the cuscobot_ws folder.
+You should run each node in a separated terminal. In all of them, you must Source bash and the package.
+
+### Run navigation stacks and rviz:
 
 ```bash
-cd ~/cuscobot_ws/
-```
-
-### Run rplidar node
-
-```bash
-roslaunch rplidar_ros rplidar_a1.launch
-```
-
-### Run teleop_twist_keyboard node
-
-```bash
-rosrun teleop_twist_keyboard teleop_twist_keyboard.py
-```
-
-### Run cuscobot Odometry node
-
-```bash
-rosrun cuscobot deadReckoning.py
-```
-
-### Run rviz
-
-```bash
-rosrun rviz rviz
-```
-
-### Check running topics
-```bash
-rostopic list
-```
-
-Check odometry communication
-
-```bash
-rostopic echo /odom
+roslaunch cuscobot nav_stacks.launch
 ```
