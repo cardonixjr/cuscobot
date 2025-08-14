@@ -39,6 +39,21 @@ rosversion rosserial
 ```
 For more details about rosserial setup, check http://wiki.ros.org/rosserial_arduino/Tutorials/Arduino%20IDE%20Setup
 
+### ROS nodes dependencies
+There are two algorythms that will be used as nodes in the robot architecture. The first one is XACRO,
+used to read/handle URDF files that define the robot shape. Install Xacro
+
+```bash
+sudo apt install ros-noetic-xacro
+```
+
+The second algorythm is robot_state_publisher, used to read xacro urdf files and publish the robot shape and its actual state.
+
+```bash
+sudo apt install ros-noetic-robot-state-publisher
+```
+
+
 ### RPLidar
 This project uses a Slamtec 2D Laser Scanner RPLIDAR A1. Install the packages for running RPLidar.
 
@@ -65,14 +80,32 @@ sudo apt-get install ros-noetic-amcl
 
 For more details about AMCL setup, check http://wiki.ros.org/amcl
 
+
 ### Teleop Twist Keyboard
-To control Cuscobot, we use keyboard commands, handle by the Teleop Twist Keyboard package for ROS. Install this package.
+To control Cuscobot, we use keyboard commands, handled by the Teleop Twist Keyboard package for ROS. Install this package.
 
 ```bash
 sudo apt-get install ros-noetic-teleop-twist-keyboard
 ```
 
 For more details about Teleop_Twist_Keyboard setup, check https://wiki.ros.org/teleop_twist_keyboard
+
+
+### RViz
+To vizualise virtualy the robot state, this project use Rviz. Install it:
+
+```bash
+sudo apt-get install ros-noetic-rviz
+```
+
+For more details about RViz setup, check http://wiki.ros.org/rviz
+
+### Python dependencies
+Finally, there are a single python library that must be installed: tf_conversions library, responsible for handling odometry transforms.
+
+```bash
+sudo apt-get install ros-noetic-tf-conversions
+```
 
 ## 1.3 Create the catkin workspace
 
