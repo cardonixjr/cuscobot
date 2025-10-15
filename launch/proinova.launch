@@ -1,0 +1,42 @@
+<launch>
+
+	<arg name="model" />
+	<param name="use_gui" value="yes" />
+
+	<!-- Parsing xacro and setting robot_description parameter -->
+	<param name="robot_description" command="xacro $(find cuscobot)/urdf/cuscobot.xacro" />
+
+	<!-- Start robot state publisher which will publish tf -->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+	<!-- Starting Teleop node -->
+	<node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" />
+
+	<!-- Starting Odometry and TF publisher node -->
+	<node pkg="cuscobot" type="deadReckoning.py" name="odom" output="screen"/>
+
+	<!-- Starting Vibrational motors controlelr -->
+	<!-- <node pkg="cuscobot" type="lidar_vib.py" name="lidar_vib" output="screen"/> -->
+
+	<!-- Starting RPLidar node -->
+	<!--<node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
+		<param name="serial_port"         type="string" value="/dev/ttyUSB0"/>
+		<param name="serial_baudrate"     type="int"    value="115200"/>
+		<param name="frame_id"            type="string" value="laser"/>
+		<param name="inverted"            type="bool"   value="false"/>
+		<param name="angle_compensate"    type="bool"   value="false"/>
+		<param name="angle_min"     type="double"    value="-1.57079994678"/>
+		<param name="angle_max"     type="double"    value="1.57079994678"/>
+  	</node> -->
+	
+	<include file="$(find rplidar_ros)/launch/rplidar_a1.launch" />
+
+	<!-- ROS Serial driver -->
+	<node name="serial_node"        pkg="rosserial_python"      type="serial_node.py">
+	<param name="port"              type="string"               value="/dev/ttyACM0"/>
+	<param name="baud"              type="int"                  value="57600"/>
+	</node>
+
+	<!-- RVIZ -->
+	<!-- <node name="rviz" pkg="rviz" type="rviz" args="-d $(find cuscobot)/urdf/config.rviz" required="true" /> -->
+</launch>
