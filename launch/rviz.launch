@@ -1,13 +1,47 @@
 <?xml version="1.0" ?>
 
 <launch>
+  <!-- Nó do RViz -->
   <node 
     pkg="rviz" 
     type="rviz" 
     name="rviz" 
     args="-d $(find cuscobot)/urdf/config.rviz"
     required="true"    
+  />
 
-    />
-    
+  <!-- Nó para salvar a trajetória do robô -->
+  <node 
+    pkg="utils_package" 
+    type="save_robot_path.py" 
+    name="save_robot_path" 
+    output="screen">
+    <param name="pose_topic" value="/amcl_pose" />
+    <param name="path_topic" value="/robot_path" />
+    <param name="save_dir" value="$(env HOME)/trajetorias" />
+    <param name="save_interval" value="1.0" />
+  </node>
+
+  <!-- Nó para detecção com RealSense e ArUco -->
+  <node 
+    pkg="utils_package" 
+    type="realsense_aruco.py" 
+    name="realsense_aruco" 
+    output="screen">
+    <param name="model_name" value="yolov8n.pt" />
+    <param name="conf_thresh" value="0.35" />
+    <param name="csv_dir" value="$(env HOME)/trajetorias" />
+    <param name="aruco_marker_length" value="0.15" />
+    <param name="gravity_samples" value="300" />
+    <param name="assoc_distance_threshold" value="1.0" />
+    <param name="max_misses" value="15" />
+    <param name="detect_every_n_frames" value="1" />
+  </node>
+
+  <!-- Script de monitoramento para plotar trajetórias -->
+  <node 
+    pkg="utils_package" 
+    type="monitor_and_plot.py" 
+    name="monitor_and_plot" 
+    output="screen" />
 </launch>
