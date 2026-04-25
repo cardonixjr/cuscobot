@@ -41,8 +41,8 @@ int motorA_EN = 12; //Controle de direção do motor A (Esquerdo))
 int motorB_EN = 13; //Controle de direção do motor B (Direito)
 
 // Strain Gauge
-const int HX711_dout = 6; //mcu > HX711 dout pin
-const int HX711_sck = 7; //mcu > HX711 sck pin
+const int HX711_dout = 9; //mcu > HX711 dout pin
+const int HX711_sck = 8; //mcu > HX711 sck pin
 HX711_ADC LoadCell(HX711_dout, HX711_sck);
 const int calVal_calVal_eepromAdress = 0;
 unsigned long t = 0;

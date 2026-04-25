@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 #!/usr/bin/env python3
 
+=======
+>>>>>>> 807b619fce01875155be22d6d5c9573578d309b0
 # ROS
 import rospy
 from PRESETS import *

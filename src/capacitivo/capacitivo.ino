@@ -11,7 +11,7 @@
 #define SMOOTH 100
 
 // determen when the sensor is understood as "ON"
-float multiplier = 1.1;
+float multiplier = 1.01;
 
 // smooth data a little:
 // the last readings

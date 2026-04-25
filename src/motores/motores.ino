@@ -38,26 +38,13 @@ void loop(){
     analogWrite(motorB_PWM, 0); //PWM do motor direito 
     delay(5000); //Aguarda 5000 milissegundos
 
-    velocidade = 30;
-    analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
-    analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
-    delay(5000); //Aguarda 5000 milissegundos
+    // velocidade = 30;
+    // analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
+    // analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
+    // delay(5000); //Aguarda 5000 milissegundos
 
-    velocidade = 200;
-    analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
-    analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
-    delay(5000); //Aguarda 5000 milissegundos
-}
-void MotorSentidoHorario(){
-  digitalWrite(motorA_EN, HIGH); //Motor A. HIGH = HORARIO
-  digitalWrite(motorB_EN, HIGH); //Motor B. HIGH = HORARIO
-  
-  analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
-  analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
-}
-void MotorSentidoAntiHorario(){ 
-  digitalWrite(motorA_EN, LOW); //Motor A. LOW = ANTI-HORÁRIO
-  digitalWrite(motorB_EN, LOW); //Motor B. LOW = ANTI-HORÁRIO
-  analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
-  analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
+    // velocidade = 200;
+    // analogWrite(motorA_PWM, velocidade); //PWM do motor esquerdo 
+    // analogWrite(motorB_PWM, velocidade); //PWM do motor direito 
+    // delay(5000); //Aguarda 5000 milissegundos
 }

@@ -6,4 +6,8 @@ conservative_reset_dist: 3.0
 planner_frequency: 5.0
 oscillation_timeout: 10.0
 oscillation_distance: 0.2
+<<<<<<< HEAD
 recovery_behavior_enabled: false
+=======
+recovery_behavior_enabled: false
+>>>>>>> 807b619fce01875155be22d6d5c9573578d309b0
