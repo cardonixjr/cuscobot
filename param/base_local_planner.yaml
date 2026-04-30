@@ -2,11 +2,7 @@ TrajectoryPlannerROS:
   meter_scoring: false
 
 ## Robot Configuration Parameters
-<<<<<<< HEAD
   max_vel_x: 0.13
-=======
-  max_vel_x: 0.12
->>>>>>> 807b619fce01875155be22d6d5c9573578d309b0
   min_vel_x: 0.07
 #  max_vel_y: 0.0
 #  min_vel_y: 0.0
@@ -15,13 +11,8 @@ TrajectoryPlannerROS:
 #  max_vel_trans:  0.2
 #  min_vel_trans:  0.035
 #
-<<<<<<< HEAD
   max_vel_theta: 1.0
   min_vel_theta: -1.0
-=======
-  max_vel_theta: 0.3
-  min_vel_theta: -0.3
->>>>>>> 807b619fce01875155be22d6d5c9573578d309b0
 
 #  acc_lim_x: 2.5
 #  acc_lim_y: 0.0
@@ -30,13 +21,8 @@ TrajectoryPlannerROS:
 #  min_in_place_vel_theta: 0.0
 
   acc_lim_theta: 3.2
-<<<<<<< HEAD
   acc_lim_x: 1.5
   acc_lim_y: 1.5
-=======
-  acc_lim_x: 2.5
-  acc_lim_y: 2.5
->>>>>>> 807b619fce01875155be22d6d5c9573578d309b0
 
 ## Goal Tolerance Parametes
   xy_goal_tolerance: 0.20
@@ -45,33 +31,19 @@ TrajectoryPlannerROS:
 #
 
 ## Forward Simulation Parameters
-<<<<<<< HEAD
   sim_time: 2 # sec
   vx_samples: 60 # units
   vy_samples: 20
   vth_samples: 80
   sim_granularity: 0.020
   angular_granularity: 0.010
-=======
-  sim_time: 1 # sec
-  vx_samples: 40 # units
-  vy_samples: 0
-  vth_samples: 80
-  sim_granularity: 0.010
->>>>>>> 807b619fce01875155be22d6d5c9573578d309b0
 #  controller_frequency: 10.0 #hz
 
 
 ## Trajectory Scoring Parameters
-<<<<<<< HEAD
   path_distance_bias: 100.0
   goal_distance_bias: 0.8
   occdist_scale: 0.015
-=======
-  path_distance_bias: 75.0
-  goal_distance_bias: 1.0
-  occdist_scale: 0.02
->>>>>>> 807b619fce01875155be22d6d5c9573578d309b0
 #  forward_point_distance: 0.325
 #  stop_time_buffer: 0.2
 #  scaling_speed: 0.05

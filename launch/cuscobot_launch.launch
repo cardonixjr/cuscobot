@@ -19,7 +19,7 @@
 	<include file="$(find rplidar_ros)/launch/rplidar_a1.launch" />
 	
 	<!-- Starting Vibrational Motors Controller -->
-	<node pkg="cuscobot" type="lidar_vib.py" name="lidar_vib" output="screen"/>
+	<!-- node pkg="cuscobot" type="lidar_vib.py" name="lidar_vib" output="screen"/ -->
 
 	<!-- ROS Serial driver -->
 	<node name="serial_node"        pkg="rosserial_python"      type="serial_node.py">
