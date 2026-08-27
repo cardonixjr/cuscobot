@@ -1,12 +1,14 @@
+#valor original obstacle: 3
 obstacle_range: 3.0
 raytrace_range: 3.5
 clearing: true
 
 footprint: [[0.075, 0.19], [-0.185, 0.19], [-0.185, -0.19], [0.075,-0.19]]
+footprint_padding: 0.08
 
 #robot_radius: 0.105
-
-inflation_radius: 1.0
+#valor original inflation: 1
+inflation_radius: 0.55
 cost_scaling_factor: 4.0
 
 #map_type: costmap

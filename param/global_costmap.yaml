@@ -4,11 +4,12 @@ global_costmap:
 
   update_frequency: 10.0
   #publish_frequency: 10.0
-  #transform_tolerance: 0.5
+  #descomentei o transfor_tolerance
+  transform_tolerance: 0.5
 
   static_map: true
   #use_dijkstra: false
   
-  cost_factor: 0.55
-  neutral_cost: 66
-  lethal_cost: 253
+  inflation_layer:
+    inflation_radius: 0.90
+    cost_scaling_factor: 2.5

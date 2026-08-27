@@ -150,13 +150,13 @@ class DeadReckoningOdom():
 
         odom = Odom()
         odom.header.stamp = current_time
-        odom.header.frame_id = "odom_link"
+        odom.header.frame_id = self.odomFrameName
 
         # set the position
         odom.pose.pose = Pose(Point(self.x, self.y, 0), Quaternion(*odom_quat))
 
         # set the velocity
-        odom.child_frame_id = "base_link"
+        odom.child_frame_id = self.baseFrameName
         odom.twist.twist = Twist(Vector3(self.v, 0, 0), Vector3(0,0,self.w))
 
         t = TransformStamped()

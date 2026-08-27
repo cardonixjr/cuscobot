@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: rospy-message-converter
+Version: 0.5.2
+Summary: Converts between Python dictionaries and JSON to rospy messages.
+Home-page: http://ros.org/wiki/rospy_message_converter
+Author: Brandon Alexander
+Author-email: baalexander@gmail.com
+Maintainer: Martin Günther
+Maintainer-email: martin.guenther@dfki.de
+License: BSD
+Platform: UNKNOWN
+
+UNKNOWN
+
+

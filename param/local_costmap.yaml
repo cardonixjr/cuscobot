@@ -1,12 +1,16 @@
 local_costmap:
-  global_frame: map
+  inflation_layer:
+    inflation_radius: 0.55
+    cost_scaling_factor: 4.0
+
+  global_frame: odom_link
   robot_base_frame: base_link
 
   update_frequency: 10.0
   publish_frequency: 10.0
-  transform_tolerance: 2.0
+  transform_tolerance: 0.5
 
-  static_map: true  
+  static_map: false  
   rolling_window: true
   width: 3
   height: 3
